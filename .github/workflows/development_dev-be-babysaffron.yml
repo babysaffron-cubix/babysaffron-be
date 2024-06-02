@@ -51,6 +51,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Before deploying, check if the publish.zip file is available
+      run: ls
+
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
