@@ -45,6 +45,22 @@ jobs:
     
     - name: Check if publish folder is available, post running publish command
       run: ls
+    
+    - name: Navigate to publish folder and list content
+      run: |
+        # Define the folder you want to navigate into
+        folder_path="publish"
+        
+        # Check if the folder exists
+        if [ -d "$folder_path" ]; then
+          echo "Navigating to $folder_path"
+          cd "$folder_path"
+          
+          echo "Listing contents of $folder_path"
+          ls -la
+        else
+          echo "Folder $folder_path does not exist"
+        fi
 
   # deploy:
   #   needs: build
