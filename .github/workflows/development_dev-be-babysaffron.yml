@@ -20,28 +20,31 @@ jobs:
 
     - name: Build solution
       run: dotnet build src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release
+    
+    - name: Check if publish folder is available, before running publish command
+      run: ls
 
     - name: Publish
       run: dotnet publish src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release --output ./publish
 
-    - name: Zip publish folder
-      run: zip -r ../publish.zip .
+    # - name: Zip publish folder
+    #   run: zip -r ../publish.zip .
     
-    - name: Find gulpfile.js
-      run: |
-        # Find the path of gulpfile.js and store it in a variable
-        publish_zip_path=$(find . -name "gulpfile.js" -print -quit)
+    # - name: Find publish.zip
+    #   run: |
+    #     # Find the path of publish.zip and store it in a variable
+    #     publish_zip_path=$(find . -name "publish.zip" -print -quit)
 
-        # Check if gulpfile.js exists
-        if [ -n "$publish_zip_path" ]; then
-          echo "gulpfile.js found at: $publish_zip_path"
-          echo "::set-output name=publish_zip_path::$publish_zip_path"
-        else
-          echo "gulpfile.js not found"
-        fi
+    #     # Check if publish.zip exists
+    #     if [ -n "$publish_zip_path" ]; then
+    #       echo "publish.zip found at: $publish_zip_path"
+    #       echo "::set-output name=publish_zip_path::$publish_zip_path"
+    #     else
+    #       echo "publish.zip not found"
+    #     fi
     
-    # - name: Check if publish folder is available
-    #   run: ls
+    - name: Check if publish folder is available, post running publish command
+      run: ls
 
   # deploy:
   #   needs: build
