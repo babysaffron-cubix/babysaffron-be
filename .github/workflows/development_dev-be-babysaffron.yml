@@ -27,17 +27,17 @@ jobs:
     - name: Zip publish folder
       run: zip -r ../publish.zip .
     
-    - name: Find publish.zip
+    - name: Find gulpfile.js
       run: |
-        # Find the path of publish.zip and store it in a variable
-        publish_zip_path=$(find . -name "publish.zip" -print -quit)
+        # Find the path of gulpfile.js and store it in a variable
+        publish_zip_path=$(find . -name "gulpfile.js" -print -quit)
 
-        # Check if publish.zip exists
+        # Check if gulpfile.js exists
         if [ -n "$publish_zip_path" ]; then
-          echo "publish.zip found at: $publish_zip_path"
+          echo "gulpfile.js found at: $publish_zip_path"
           echo "::set-output name=publish_zip_path::$publish_zip_path"
         else
-          echo "publish.zip not found"
+          echo "gulpfile.js not found"
         fi
     
     # - name: Check if publish folder is available
