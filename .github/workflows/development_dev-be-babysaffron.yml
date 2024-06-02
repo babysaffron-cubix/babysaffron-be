@@ -46,14 +46,6 @@ jobs:
     - name: Check if publish folder is available, post running publish command
       run: ls
     
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-    - name: Before deploying, check if the publish.zip file is available
-      run: ls
-
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
@@ -61,3 +53,19 @@ jobs:
         package: publish.zip
         slot-name: production  # optionally, specify deployment slot name
         publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_85EF86EBFDE04F478951ABEEEDEE18B7}}
+    
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+
+  #   steps:
+  #   - name: Before deploying, check if the publish.zip file is available
+  #     run: ls
+
+  #   - name: Deploy to Azure Web App
+  #     uses: azure/webapps-deploy@v2
+  #     with:
+  #       app-name: 'dev-be-babysaffron'
+  #       package: publish.zip
+  #       slot-name: production  # optionally, specify deployment slot name
+  #       publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_85EF86EBFDE04F478951ABEEEDEE18B7}}
