@@ -36,6 +36,6 @@ jobs:
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'dev-be-babysaffron'
-        package: src/Presentation/Nop.Web/publish.zip
+        package: ./publish.zip
         slot-name: production  # optionally, specify deployment slot name
         publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_85EF86EBFDE04F478951ABEEEDEE18B7}}
