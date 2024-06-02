@@ -27,8 +27,8 @@ jobs:
     - name: Publish
       run: dotnet publish src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release --output ./publish
 
-    # - name: Zip publish folder
-    #   run: zip -r ../publish.zip .
+    - name: Zip publish folder
+      run: zip -r publish.zip publish
     
     # - name: Find publish.zip
     #   run: |
