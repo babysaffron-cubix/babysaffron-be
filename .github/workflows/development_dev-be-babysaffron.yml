@@ -22,10 +22,10 @@ jobs:
       run: dotnet build src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release
 
     - name: Publish
-      run: dotnet publish src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release --output publish
+      run: dotnet publish src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release --output ./publish
 
     - name: Zip publish folder
-      run: zip -r publish.zip publish
+      run: zip -r ../publish.zip .
 
   deploy:
     needs: build
