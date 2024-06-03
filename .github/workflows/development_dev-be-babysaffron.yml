@@ -28,7 +28,7 @@ jobs:
       run: dotnet publish src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release --output ./publish
 
     - name: Zip publish folder
-      run: zip -r archive.zip publish/*
+      run: zip -r publish.zip publish/*
     
     # - name: Find publish.zip
     #   run: |
@@ -43,17 +43,24 @@ jobs:
     #       echo "publish.zip not found"
     #     fi
     
-    - name: Check if archive.zip folder is available, post running publish command
+    - name: Check if publish.zip folder is available, post running publish command
       run: ls
     
     - name: Deploy to Azure Web App, checking
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'dev-be-babysaffron'
-        package: archive.zip
+        package: './publish.zip'
         slot-name: production  # optionally, specify deployment slot name
         publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_85EF86EBFDE04F478951ABEEEDEE18B7}}
     
+    - name: Move contents to wwwroot
+      run: |
+          unzip -o publish.zip -d extracted
+          mv extracted/* .
+          rm -rf extracted
+          rm publish.zip
+          mv * /path/to/wwwroot/
   # deploy:
   #   needs: build
   #   runs-on: ubuntu-latest
