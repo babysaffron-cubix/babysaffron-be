@@ -33,7 +33,7 @@ jobs:
     - name: Check if publish folder is available, post running publish command
       run: ls
     
-    - name: Deploy to Azure Web App, checking
+    - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
         app-name: 'dev-be-babysaffron'
