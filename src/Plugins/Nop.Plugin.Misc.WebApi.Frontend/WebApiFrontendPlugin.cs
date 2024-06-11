@@ -1,32 +1,47 @@
-﻿using Microsoft.AspNetCore.Routing;
-using Nop.Core;
+﻿using System.Globalization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Infrastructure;
+using Microsoft.AspNetCore.Mvc.Routing;
+using Nop.Plugin.Misc.WebApi.Framework;
+using Nop.Plugin.Misc.WebApi.Framework.Services;
 using Nop.Services.Common;
+using Nop.Services.Configuration;
+using Nop.Services.Localization;
 using Nop.Services.Plugins;
-using Nop.Services.Security;
-using Nop.Web.Framework;
-using Nop.Web.Framework.Menu;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend;
 
 /// <summary>
 /// Represents the Web API frontend plugin
 /// </summary>
-public class WebApiFrontendPlugin : BasePlugin, IAdminMenuPlugin, IMiscPlugin
+public partial class WebApiFrontendPlugin : BasePlugin, IMiscPlugin
 {
     #region Fields
 
-    protected readonly IPermissionService _permissionService;
-    protected readonly IWebHelper _webHelper;
+    private readonly IActionContextAccessor _actionContextAccessor;
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly ILocalizationService _localizationService;
+    private readonly ISettingService _settingService;
+    private readonly IUrlHelperFactory _urlHelperFactory;
+    private readonly WebApiHttpClient _webApiHttpClient;
 
     #endregion
 
     #region Ctor
 
-    public WebApiFrontendPlugin(IPermissionService permissionService,
-        IWebHelper webHelper)
+    public WebApiFrontendPlugin(IActionContextAccessor actionContextAccessor,
+        IJwtTokenService jwtTokenService,
+        ILocalizationService localizationService,
+        ISettingService settingService,
+        IUrlHelperFactory urlHelperFactory,
+        WebApiHttpClient webApiHttpClient)
     {
-        _permissionService = permissionService;
-        _webHelper = webHelper;
+        _actionContextAccessor = actionContextAccessor;
+        _jwtTokenService = jwtTokenService;
+        _localizationService = localizationService;
+        _settingService = settingService;
+        _urlHelperFactory = urlHelperFactory;
+        _webApiHttpClient = webApiHttpClient;
     }
 
     #endregion
@@ -38,7 +53,9 @@ public class WebApiFrontendPlugin : BasePlugin, IAdminMenuPlugin, IMiscPlugin
     /// </summary>
     public override string GetConfigurationPageUrl()
     {
-        return $"{_webHelper.GetStoreLocation()}Admin/WebApiFrontend/Configure";
+        ArgumentNullException.ThrowIfNull(_actionContextAccessor.ActionContext);
+
+        return _urlHelperFactory.GetUrlHelper(_actionContextAccessor.ActionContext).RouteUrl(WebApiFrontendDefaults.ConfigurationRouteName);
     }
 
     /// <summary>
@@ -47,47 +64,52 @@ public class WebApiFrontendPlugin : BasePlugin, IAdminMenuPlugin, IMiscPlugin
     /// <returns>A task that represents the asynchronous operation</returns>
     public override async Task InstallAsync()
     {
+        //locales
+        await _localizationService.AddOrUpdateLocaleResourceAsync(WebApiCommonDefaults.Locales);
+
+        //settings
+        await _settingService.SaveSettingAsync(new WebApiCommonSettings
+        {
+            TokenLifetimeDays = WebApiCommonDefaults.TokenLifeTime,
+            SecretKey = _jwtTokenService.NewSecretKey
+        });
+
+        //plugin installation confirmation
+        try
+        {
+            var _ = await _webApiHttpClient.InstallationCompletedAsync(PluginDescriptor);
+        }
+        catch
+        {
+            // ignored
+        }
+
         await base.InstallAsync();
     }
 
-    public async Task ManageSiteMapAsync(SiteMapNode rootNode)
-    {
-        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManagePlugins))
-            return;
-
-        var config = rootNode.ChildNodes.FirstOrDefault(node => node.SystemName.Equals("Configuration"));
-        if (config == null)
-            return;
-
-        var plugins = config.ChildNodes.FirstOrDefault(node => node.SystemName.Equals("Local plugins"));
-
-        if (plugins == null)
-            return;
-
-        var index = config.ChildNodes.IndexOf(plugins);
-
-        if (index < 0)
-            return;
-
-        config.ChildNodes.Insert(index, new SiteMapNode
-        {
-            SystemName = "nopCommerce Web API plugin",
-            Title = "Web API",
-            ControllerName = "WebApiFrontend",
-            ActionName = "Configure",
-            IconClass = "far fa-dot-circle",
-            Visible = true,
-            RouteValues = new RouteValueDictionary { { "area", AreaNames.ADMIN } }
-        });
-    }
-
     /// <summary>
-    /// Uninstall the plugin
+    /// Update plugin
     /// </summary>
+    /// <param name="currentVersion">Current version of plugin</param>
+    /// <param name="targetVersion">New version of plugin</param>
     /// <returns>A task that represents the asynchronous operation</returns>
-    public override async Task UninstallAsync()
+    public override async Task UpdateAsync(string currentVersion, string targetVersion)
     {
-        await base.UninstallAsync();
+        decimal version;
+        try
+        {
+            version = Convert.ToDecimal(currentVersion.Replace(".", ""), CultureInfo.InvariantCulture);
+        }
+        catch
+        {
+            return;
+        }
+
+        if (version < 46005M)
+        {
+            await _localizationService.DeleteLocaleResourcesAsync("Plugins.WebApi.Frontend");
+            await _localizationService.AddOrUpdateLocaleResourceAsync(WebApiCommonDefaults.Locales);
+        }
     }
 
     #endregion

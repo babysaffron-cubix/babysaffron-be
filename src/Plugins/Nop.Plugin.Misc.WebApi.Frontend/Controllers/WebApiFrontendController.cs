@@ -1,7 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Nop.Plugin.Misc.WebApi.Framework.Controllers;
+using Nop.Plugin.Misc.WebApi.Framework.Services;
+using Nop.Services.Configuration;
+using Nop.Services.Localization;
+using Nop.Services.Messages;
 using Nop.Services.Security;
 using Nop.Web.Framework;
-using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Mvc.Filters;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend.Controllers;
@@ -9,31 +13,17 @@ namespace Nop.Plugin.Misc.WebApi.Frontend.Controllers;
 [AutoValidateAntiforgeryToken]
 [AuthorizeAdmin]
 [Area(AreaNames.ADMIN)]
-public class WebApiFrontendController : BasePluginController
+public partial class WebApiFrontendController : WebApiConfigController
 {
-    #region Fields
+    #region Ctor
 
-    protected readonly IPermissionService _permissionService;
-
-    #endregion
-
-    #region Ctor 
-
-    public WebApiFrontendController(IPermissionService permissionService)
+    public WebApiFrontendController(IJwtTokenService jwtTokenService,
+        ILocalizationService localizationService,
+        INotificationService notificationService,
+        IPermissionService permissionService,
+        ISettingService settingService) : base(jwtTokenService, localizationService, notificationService,
+        permissionService, settingService)
     {
-        _permissionService = permissionService;
-    }
-
-    #endregion
-
-    #region Methods
-
-    public virtual async Task<IActionResult> Configure()
-    {
-        if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.ManagePlugins))
-            return AccessDeniedView();
-
-        return View("~/Plugins/Misc.WebApi.Frontend/Views/Configure.cshtml");
     }
 
     #endregion
