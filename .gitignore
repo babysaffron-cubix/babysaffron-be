@@ -184,6 +184,9 @@ src/Presentation/Nop.Web/Plugins/*
 !src/Presentation/Nop.Web/Plugins/Uploaded
 src/Presentation/Nop.Web/Plugins/Uploaded/*
 !src/Presentation/Nop.Web/Plugins/Uploaded/placeholder.txt
+!src/Presentation/Nop.Web/Plugins/Misc.WebApi.Backend
+!src/Presentation/Nop.Web/Plugins/Misc.WebApi.Framework
+!src/Presentation/Nop.Web/Plugins/Misc.WebApi.Frontend
 src/Presentation/Nop.Web/wwwroot/.well-known/*
 !src/Presentation/Nop.Web/wwwroot/.well-known/Index.htm
 src/Presentation/Nop.Web/wwwroot/bundles/*
