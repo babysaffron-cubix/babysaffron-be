@@ -43,5 +43,11 @@ public partial class AuthorizationUserService : BaseAuthorizationService, IAutho
         return GetAuthenticateResponse(customer);
     }
 
+
+    public virtual async Task<AuthenticateResponse> AuthenticateAsyncByEmail(AuthenticateRequestEmail request)
+    {
+       return await base.AuthenticateAsync(request);
+    }
+
     #endregion
 }

@@ -415,6 +415,10 @@ public partial class CustomerController : BasePublicController
 
     #region Login / logout
 
+
+
+
+
     //available even when a store is closed
     [CheckAccessClosedStore(ignore: true)]
     //available even when navigation is not allowed

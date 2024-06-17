@@ -1423,11 +1423,6 @@
             <param name="storeId">Store identifier</param>
             <param name="quantity">Quantity</param>
         </member>
-        <member name="M:Nop.Plugin.Misc.WebApi.Backend.Controllers.CommonInfoController.GetSwaggerDocVersion">
-            <summary>
-            Gets swagger doc version API
-            </summary>
-        </member>
         <member name="M:Nop.Plugin.Misc.WebApi.Backend.Controllers.Common.AddressAttributeController.GetAll">
             <summary>
             Gets all address attributes
@@ -1555,6 +1550,11 @@
             </summary>
             <param name="pageIndex">Page index</param>
             <param name="pageSize">Page size</param>
+        </member>
+        <member name="M:Nop.Plugin.Misc.WebApi.Backend.Controllers.CommonInfoController.GetSwaggerDocVersion">
+            <summary>
+            Gets swagger doc version API
+            </summary>
         </member>
         <member name="M:Nop.Plugin.Misc.WebApi.Backend.Controllers.Customers.CustomerAttributeController.GetAll">
             <summary>

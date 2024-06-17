@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using DocumentFormat.OpenXml.EMMA;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Nop.Core;
@@ -14,10 +15,12 @@ using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Events;
 using Nop.Plugin.Misc.WebApi.Framework.Infrastructure.Mapper.Extensions;
+using Nop.Plugin.Misc.WebApi.Framework.Models;
 using Nop.Plugin.Misc.WebApi.Frontend.Dto;
 using Nop.Plugin.Misc.WebApi.Frontend.Dto.Customer;
 using Nop.Plugin.Misc.WebApi.Frontend.Dto.Media;
 using Nop.Plugin.Misc.WebApi.Frontend.Models;
+using Nop.Plugin.Misc.WebApi.Frontend.Services;
 using Nop.Services.Attributes;
 using Nop.Services.Authentication;
 using Nop.Services.Authentication.External;
@@ -26,6 +29,7 @@ using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
+using Nop.Services.Events;
 using Nop.Services.ExportImport;
 using Nop.Services.Gdpr;
 using Nop.Services.Helpers;
@@ -92,6 +96,9 @@ public partial class CustomerController : BaseNopWebApiFrontendController
 
     private static readonly char[] _separator = [','];
 
+    private readonly IAuthorizationUserService _authorizationUserService;
+
+
     #endregion
 
     #region Ctor
@@ -138,7 +145,8 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         IWorkflowMessageService workflowMessageService,
         LocalizationSettings localizationSettings,
         MediaSettings mediaSettings,
-        TaxSettings taxSettings)
+        TaxSettings taxSettings,
+        IAuthorizationUserService authorizationUserService)
     {
         _addressSettings = addressSettings;
         _captchaSettings = captchaSettings;
@@ -183,6 +191,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         _localizationSettings = localizationSettings;
         _mediaSettings = mediaSettings;
         _taxSettings = taxSettings;
+        _authorizationUserService = authorizationUserService;
     }
 
     #endregion
@@ -433,6 +442,139 @@ public partial class CustomerController : BaseNopWebApiFrontendController
 
     #region Login / logout
 
+
+
+    /// <summary>
+    /// Send otp to email
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpGet("{email}")]
+    [ProducesResponseType(typeof(OtpRelatedResponse), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> GenerateOtp(string email)
+    {
+        OtpRelatedResponse otpGenerateResponse = new OtpRelatedResponse();
+        var response = await _customerService.GenerateOtp(email);
+
+        if (email == null)
+            otpGenerateResponse.ResultMessage = "Please pass email";
+
+        if (response.Success == true)
+            otpGenerateResponse.ResultMessage = response.Message != null ? response.Message : "Otp is sent to your email";
+
+        else
+            otpGenerateResponse.ResultMessage = response.Errors[0];
+
+        return Ok(otpGenerateResponse);
+    }
+
+
+
+    [HttpGet("{email},{otp}")]
+    [ProducesResponseType(typeof(OtpValidationResult), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> ValidateOtpAndLogin(string email, string otp)
+    {
+        OtpRelatedResponse otpValidationResult = new OtpRelatedResponse();
+        var response = await _customerService.ValidateOtp(email, otp);
+
+
+        if (response.Success == true)
+        {
+            otpValidationResult.ResultMessage = "Otp is validated";
+            var loginOrRegisterResponse = await LoginOrRegister(email);
+            return Ok(loginOrRegisterResponse);
+        }
+
+        else
+        {
+            otpValidationResult.ResultMessage = response.Errors[0];
+            return Ok(otpValidationResult);
+
+        }
+
+    }
+
+
+    private async Task<AuthenticateResponse> LoginOrRegister(string email)
+    {
+        var existingCustomer = await _customerService.GetCustomerByEmailAsync(email);
+
+        if(existingCustomer != null)
+        {
+            // customer already exist, only login and return token
+            return await LoginUserByEmail(email, existingCustomer);
+
+        }
+        else
+        {
+            //customer does not exist, register and then login
+            return await RegisterByEmail(email);
+
+        }
+    }
+
+
+    private async Task<AuthenticateResponse> LoginUserByEmail(string email, Customer existingCustomer)
+    {
+        var currentCustomer = await _workContext.GetCurrentCustomerAsync();
+
+        AuthenticateCustomerRequestEmail authenticateCustomerRequestEmail = new AuthenticateCustomerRequestEmail() { Email = email };
+
+        var response = await _authorizationUserService.AuthenticateAsyncByEmail(authenticateCustomerRequestEmail);
+
+
+        if (!string.IsNullOrWhiteSpace(response.Token))
+        {
+            if (currentCustomer?.Id != existingCustomer.Id)
+            {
+                // migrate shopping cart
+                await _shoppingCartService.MigrateShoppingCartAsync(currentCustomer, existingCustomer, true);
+
+                await _workContext.SetCurrentCustomerAsync(existingCustomer);
+            }
+
+            //raise event
+            await _eventPublisher.PublishAsync(new CustomerLoggedinEvent(existingCustomer));
+
+            //activity log
+            await _customerActivityService.InsertActivityAsync(existingCustomer, "PublicStore.Login",
+            await _localizationService.GetResourceAsync("ActivityLog.PublicStore.Login"), existingCustomer);
+        }
+
+        return response;
+
+        }
+
+
+    private async Task<AuthenticateResponse> RegisterByEmail(string email)
+    {
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        var store = await _storeContext.GetCurrentStoreAsync();
+        customer.RegisteredInStoreId = store.Id;
+
+        var isApproved = _customerSettings.UserRegistrationType == UserRegistrationType.Standard;
+
+        var registrationRequest = new CustomerRegistrationRequest(customer,
+           email,
+           email,
+           email,
+           _customerSettings.DefaultPasswordFormat,
+           store.Id,
+           isApproved);
+        var registrationResult = await _customerRegistrationService.RegisterCustomerAsync(registrationRequest);
+
+        if (registrationResult.Success)
+        {
+            return await LoginUserByEmail(email, customer);
+        }
+
+        AuthenticateResponse authenticateResponse = new AuthenticateResponse(null);
+        return authenticateResponse;
+
+    }
+
+
+
     /// <summary>
     /// Login
     /// </summary>
@@ -451,7 +593,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             var customer = await (_customerSettings.UsernamesEnabled
                 ? _customerService.GetCustomerByUsernameAsync(username)
                 : _customerService.GetCustomerByEmailAsync(username));
-
+    
 
             if (currentCustomer?.Id != customer.Id)
             {

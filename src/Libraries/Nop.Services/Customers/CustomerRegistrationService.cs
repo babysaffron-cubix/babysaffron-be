@@ -540,5 +540,45 @@ public partial class CustomerRegistrationService : ICustomerRegistrationService
         await _customerService.UpdateCustomerAsync(customer);
     }
 
+    /// <summary>
+    /// Validate if the custeomr exists using email
+    /// </summary>
+    /// <param name="email"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public virtual async Task<CustomerLoginResults> ValidateCustomerAsync(string email)
+    {
+        var customer = await _customerService.GetCustomerByEmail(email);
+
+        if (customer == null)
+            return CustomerLoginResults.CustomerNotExist;
+        //only registered can login
+        if (!await _customerService.IsRegisteredAsync(customer))
+            return CustomerLoginResults.NotRegistered;
+        //check whether a customer is locked out
+        if (customer.CannotLoginUntilDateUtc.HasValue && customer.CannotLoginUntilDateUtc.Value > DateTime.UtcNow)
+            return CustomerLoginResults.LockedOut;
+
+        var selectedProvider = await _permissionService.AuthorizeAsync(StandardPermissionProvider.EnableMultiFactorAuthentication, customer)
+            ? await _genericAttributeService.GetAttributeAsync<string>(customer, NopCustomerDefaults.SelectedMultiFactorAuthenticationProviderAttribute)
+            : null;
+        var store = await _storeContext.GetCurrentStoreAsync();
+        var methodIsActive = await _multiFactorAuthenticationPluginManager.IsPluginActiveAsync(selectedProvider, customer, store.Id);
+        if (methodIsActive)
+            return CustomerLoginResults.MultiFactorAuthenticationRequired;
+
+        if (!string.IsNullOrEmpty(selectedProvider))
+            _notificationService.WarningNotification(await _localizationService.GetResourceAsync("MultiFactorAuthentication.Notification.SelectedMethodIsNotActive"));
+
+        //update login details
+        customer.FailedLoginAttempts = 0;
+        customer.CannotLoginUntilDateUtc = null;
+        customer.RequireReLogin = false;
+        customer.LastLoginDateUtc = DateTime.UtcNow;
+        await _customerService.UpdateCustomerAsync(customer);
+
+        return CustomerLoginResults.Successful;
+    }
+
     #endregion
 }

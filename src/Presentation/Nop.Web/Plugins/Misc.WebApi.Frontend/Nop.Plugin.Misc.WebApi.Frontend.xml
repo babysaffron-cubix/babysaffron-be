@@ -10,6 +10,12 @@
             </summary>
             <param name="request"></param>
         </member>
+        <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.AuthenticateController.GetTokenByEmail(Nop.Plugin.Misc.WebApi.Frontend.Models.AuthenticateCustomerRequestEmail)">
+            <summary>
+            Authenticate user by Email
+            </summary>
+            <param name="request"></param>
+        </member>
         <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.AuthenticateController.GetApiVersion">
             <summary>
             Gets API version
@@ -509,6 +515,13 @@
             A task that represents the asynchronous operation
             The task result contains the attributes in XML format
             </returns>
+        </member>
+        <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.CustomerController.GenerateOtp(System.String)">
+            <summary>
+            Send otp to email
+            </summary>
+            <param name="request"></param>
+            <returns></returns>
         </member>
         <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.CustomerController.Login(Nop.Plugin.Misc.WebApi.Frontend.Models.LoginCustomerRequest)">
             <summary>

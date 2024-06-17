@@ -109,6 +109,7 @@ public partial class NopStartup : INopStartup
 
         //helpers classes
         services.AddScoped<ITinyMceHelper, TinyMceHelper>();
+
     }
 
     /// <summary>
