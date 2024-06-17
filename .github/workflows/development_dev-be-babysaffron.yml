@@ -18,7 +18,12 @@ jobs:
       with:
         dotnet-version: '8.x'
 
-    - name: Build solution
+
+    - name: Build complete solution
+      run: dotnet build src/NopCommerce.sln --configuration Release
+
+
+    - name: Build Nop.Web solution
       run: dotnet build src/Presentation/Nop.Web/Nop.Web.csproj --configuration Release
     
     - name: Check if publish folder is available, before running publish command
