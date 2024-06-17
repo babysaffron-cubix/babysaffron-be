@@ -195,7 +195,6 @@ public partial class CustomerController : BasePublicController
         _storeInformationSettings = storeInformationSettings;
         _taxSettings = taxSettings;
     }
-
     #endregion
 
     #region Utilities
@@ -414,10 +413,6 @@ public partial class CustomerController : BasePublicController
     #region Methods
 
     #region Login / logout
-
-
-
-
 
     //available even when a store is closed
     [CheckAccessClosedStore(ignore: true)]
