@@ -49,6 +49,28 @@ public partial class AuthenticateController : BaseNopWebApiController
         return Ok(response);
     }
 
+
+    /// <summary>
+    /// Authenticate user by Email
+    /// </summary>
+    /// <param name="request"></param>
+    [Authorize(true)]
+    [HttpPost]
+    [ProducesResponseType(typeof(AuthenticateResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    public virtual async Task<IActionResult> GetTokenByEmail([FromBody] AuthenticateCustomerRequestEmail request)
+    {
+        var response = await _authorizationUserService.AuthenticateAsyncByEmail(request);
+
+        if (response == null)
+            return Unauthorized("Email is incorrect");
+
+        return Ok(response);
+    }
+
+
+
     /// <summary>
     /// Gets API version
     /// </summary>

@@ -188,6 +188,16 @@ public partial interface ICustomerService
     Task<Customer> GetCustomerByUsernameAsync(string username);
 
     /// <summary>
+    /// Get customer my phone
+    /// </summary>
+    /// <param name="phone">phone</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the customer
+    /// </returns>
+    Task<Customer> GetCustomerByEmail(string phone);
+
+    /// <summary>
     /// Insert a guest customer
     /// </summary>
     /// <returns>
@@ -353,6 +363,26 @@ public partial interface ICustomerService
     /// The task result contains the list of guids not existing customers
     /// </returns>
     Task<Guid[]> GetNotExistingCustomersAsync(Guid[] guids);
+
+
+    /// <summary>
+    /// Generate Otp and send it to email
+    /// </summary>
+    /// <param name="email">emailId on which otp is to be sent</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the response of otp sent to email
+    /// </returns>
+    Task<OtpGeneratorResult> GenerateOtp(string email);
+
+
+    /// <summary>
+    /// Validate otp for an email
+    /// </summary>
+    /// <param name="email">email for which otp is to be validated</param>
+    /// <param name="otp">otp that needs to be validated</param>
+    /// <returns></returns>
+    Task<OtpValidationResult> ValidateOtp(string email, string otp);
 
     #endregion
 

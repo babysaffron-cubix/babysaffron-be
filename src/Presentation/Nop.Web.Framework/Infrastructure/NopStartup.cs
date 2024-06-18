@@ -259,6 +259,13 @@ public partial class NopStartup : INopStartup
 
         services.AddSingleton<IActionContextAccessor, ActionContextAccessor>();
 
+
+        //custom services - NOT OUT OF THE BOX
+        services.AddSingleton<IOtpSenderService, EmailOtpSenderService>();
+        services.AddSingleton<IOtpGeneratorService, OtpGeneratorService>();
+
+
+
         //register all settings
         var typeFinder = Singleton<ITypeFinder>.Instance;
 

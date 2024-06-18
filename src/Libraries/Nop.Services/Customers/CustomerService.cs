@@ -1,4 +1,6 @@
 ﻿using System.Xml;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.Extensions.DependencyInjection;
 using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Domain.Blogs;
@@ -52,6 +54,9 @@ public partial class CustomerService : ICustomerService
     protected readonly ShoppingCartSettings _shoppingCartSettings;
     protected readonly TaxSettings _taxSettings;
 
+    protected readonly IOtpSenderService _otpSenderService;
+
+
     #endregion
 
     #region Ctor
@@ -80,7 +85,8 @@ public partial class CustomerService : ICustomerService
         IStaticCacheManager staticCacheManager,
         IStoreContext storeContext,
         ShoppingCartSettings shoppingCartSettings,
-        TaxSettings taxSettings)
+        TaxSettings taxSettings,
+        IOtpSenderService otpSenderService)
     {
         _customerSettings = customerSettings;
         _eventPublisher = eventPublisher;
@@ -107,6 +113,7 @@ public partial class CustomerService : ICustomerService
         _storeContext = storeContext;
         _shoppingCartSettings = shoppingCartSettings;
         _taxSettings = taxSettings;
+        _otpSenderService = otpSenderService;
     }
 
     #endregion
@@ -1670,6 +1677,87 @@ public partial class CustomerService : ICustomerService
 
         return await GetCustomerAddressAsync(customer.Id, customer.ShippingAddressId ?? 0);
     }
+
+
+    /// <summary>
+    /// Get a customer by email
+    /// </summary>
+    /// <param name="email">email</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the result
+    /// </returns>
+    public virtual async Task<Customer> GetCustomerByEmail(string email)
+    {
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
+
+        var query = from c in _customerRepository.Table
+        orderby c.Id
+                    where c.Email == email
+                    select c;
+        var customer = await query.FirstOrDefaultAsync();
+
+        return customer;
+    }
+
+
+    /// <summary>
+    /// Generate an otp for the input email
+    /// </summary>
+    /// <param name="email">email on which otp needs to be sent</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// the task result contains the result
+    /// </returns>
+    public virtual async Task<OtpGeneratorResult> GenerateOtp(string email)
+    {
+        var result = new OtpGeneratorResult();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            result.AddError("Email is required for otp generation");
+            return result;
+        }
+
+        var response = await _otpSenderService.RequestOtp();
+        result.Message = response;
+
+        return result;
+
+    }
+
+
+    /// <summary>
+    /// Validate the otp which was sent to the input email
+    /// </summary>
+    /// <param name="email">email on which otp was sent</param>
+    /// <param name="otp">the otp which was sent</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// the task result contains the result
+    /// </returns>
+    public virtual async Task<OtpValidationResult> ValidateOtp(string email, string otp)
+    {
+        var result = new OtpValidationResult();
+
+        if (string.IsNullOrWhiteSpace(email))
+        {
+            result.AddError("Email is required against which otp is to be validated");
+            return result;
+        }
+        if (string.IsNullOrWhiteSpace(otp))
+        {
+            result.AddError($"Please provide the otp which needs to be validated for {email}");
+        }
+
+        ///TODO: implement call for validating otp
+
+        return result;
+
+    }
+
+
 
     #endregion
 

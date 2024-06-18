@@ -69,5 +69,28 @@ public abstract partial class BaseAuthorizationService
         return GetAuthenticateResponse(customer);
     }
 
+
+    /// <summary>
+    /// Get JWT token for customer
+    /// </summary>
+    /// <param name="request">Authentication request using phone number</param>
+    /// <returns>JWT token as authenticate response</returns>
+    public virtual async Task<AuthenticateResponse> AuthenticateAsync(AuthenticateRequestEmail request)
+    {
+        var loginResult = await _customerRegistrationService.ValidateCustomerAsync(request.Email);
+
+        if (loginResult != CustomerLoginResults.Successful)
+            return null;
+
+        var customer = await (_customerService.GetCustomerByEmail(request.Email));
+
+        _ = await _customerRegistrationService.SignInCustomerAsync(customer, null);
+
+        return GetAuthenticateResponse(customer);
+    }
+
+
+    
+
     #endregion
 }

@@ -20,6 +20,16 @@ public partial interface ICustomerRegistrationService
     Task<CustomerLoginResults> ValidateCustomerAsync(string usernameOrEmail, string password);
 
     /// <summary>
+    /// Validate customer based on phone number
+    /// </summary>
+    /// <param name="email">Email of the user</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// the task result contains the result
+    /// </returns>
+    Task<CustomerLoginResults> ValidateCustomerAsync(string email);
+
+    /// <summary>
     /// Register customer
     /// </summary>
     /// <param name="request">Request</param>

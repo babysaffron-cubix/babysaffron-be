@@ -130,10 +130,13 @@ public partial class CookieAuthenticationService : IAuthenticationService
 
         //get the latest password
         var customerPassword = await _customerService.GetCurrentPasswordAsync(customer.Id);
-        //require a customer to re-login after password changing
-        var isPasswordChange = trimMilliseconds(customerPassword.CreatedOnUtc).CompareTo(trimMilliseconds(authenticateResult.Properties.IssuedUtc?.DateTime ?? DateTime.UtcNow)) > 0;
-        if (_customerSettings.RequiredReLoginAfterPasswordChange && isPasswordChange)
-            return null;
+        if (customerPassword != null)
+        {
+            //require a customer to re-login after password changing
+            var isPasswordChange = trimMilliseconds(customerPassword.CreatedOnUtc).CompareTo(trimMilliseconds(authenticateResult.Properties.IssuedUtc?.DateTime ?? DateTime.UtcNow)) > 0;
+            if (_customerSettings.RequiredReLoginAfterPasswordChange && isPasswordChange)
+                return null;
+        }
 
         //cache authenticated customer
         _cachedCustomer = customer;

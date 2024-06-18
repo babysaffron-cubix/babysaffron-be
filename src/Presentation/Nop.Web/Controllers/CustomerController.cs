@@ -195,7 +195,6 @@ public partial class CustomerController : BasePublicController
         _storeInformationSettings = storeInformationSettings;
         _taxSettings = taxSettings;
     }
-
     #endregion
 
     #region Utilities

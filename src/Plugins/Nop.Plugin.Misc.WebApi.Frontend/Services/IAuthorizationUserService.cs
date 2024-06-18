@@ -6,4 +6,7 @@ namespace Nop.Plugin.Misc.WebApi.Frontend.Services;
 public interface IAuthorizationUserService
 {
     Task<AuthenticateResponse> AuthenticateAsync(AuthenticateCustomerRequest request);
+
+    Task<AuthenticateResponse> AuthenticateAsyncByEmail(AuthenticateRequestEmail request);
+
 }
