@@ -263,6 +263,9 @@ public partial class NopStartup : INopStartup
         //custom services - NOT OUT OF THE BOX
         services.AddSingleton<IOtpSenderService, EmailOtpSenderService>();
         services.AddSingleton<IOtpGeneratorService, OtpGeneratorService>();
+        services.AddSingleton<IOtpValidationService, OtpValidationService>();
+
+        
 
 
 

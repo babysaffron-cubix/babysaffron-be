@@ -55,6 +55,7 @@ public partial class CustomerService : ICustomerService
     protected readonly TaxSettings _taxSettings;
 
     protected readonly IOtpSenderService _otpSenderService;
+    protected readonly IOtpValidationService _otpValidationService;
 
 
     #endregion
@@ -86,7 +87,8 @@ public partial class CustomerService : ICustomerService
         IStoreContext storeContext,
         ShoppingCartSettings shoppingCartSettings,
         TaxSettings taxSettings,
-        IOtpSenderService otpSenderService)
+        IOtpSenderService otpSenderService,
+        IOtpValidationService otpValidationService)
     {
         _customerSettings = customerSettings;
         _eventPublisher = eventPublisher;
@@ -114,6 +116,7 @@ public partial class CustomerService : ICustomerService
         _shoppingCartSettings = shoppingCartSettings;
         _taxSettings = taxSettings;
         _otpSenderService = otpSenderService;
+        _otpValidationService = otpValidationService;
     }
 
     #endregion
@@ -1720,7 +1723,7 @@ public partial class CustomerService : ICustomerService
             return result;
         }
 
-        var response = await _otpSenderService.RequestOtp();
+        var response = await _otpSenderService.RequestOtp(email);
         result.Message = response;
 
         return result;
@@ -1739,20 +1742,22 @@ public partial class CustomerService : ICustomerService
     /// </returns>
     public virtual async Task<OtpValidationResult> ValidateOtp(string email, string otp)
     {
-        var result = new OtpValidationResult();
+
+        List<string> errors = new List<string>();
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            result.AddError("Email is required against which otp is to be validated");
-            return result;
+            errors.Add("Email is required against which otp is to be validated");
+
         }
         if (string.IsNullOrWhiteSpace(otp))
         {
-            result.AddError($"Please provide the otp which needs to be validated for {email}");
+            errors.Add($"Please provide the otp which needs to be validated for {email}");
         }
 
-        ///TODO: implement call for validating otp
+        var result = await _otpValidationService.ValidateOtp(email, otp);
 
+        result.Errors = errors;
         return result;
 
     }
