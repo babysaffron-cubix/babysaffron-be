@@ -35,7 +35,7 @@ public class WebApiCommonDefaults
     /// <summary>
     /// Token lifetime in days
     /// </summary>
-    public static int TokenLifeTime => 7;
+    public static int TokenLifeTime => 365;
 
     /// <summary>
     /// The JWT token signature algorithm
