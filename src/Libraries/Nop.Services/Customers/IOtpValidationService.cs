@@ -3,6 +3,6 @@ namespace Nop.Services.Customers;
 
 public partial interface IOtpValidationService
 {
-   Task<OtpGeneratorResult> ValidateOtp(string otp);
+   Task<OtpValidationResult> ValidateOtp(string email, string otp);
 }
 
