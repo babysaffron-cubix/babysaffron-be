@@ -1742,23 +1742,25 @@ public partial class CustomerService : ICustomerService
     /// </returns>
     public virtual async Task<OtpValidationResult> ValidateOtp(string email, string otp)
     {
-
-        List<string> errors = new List<string>();
+        OtpValidationResult otpValidationResult = new OtpValidationResult();
+        
 
         if (string.IsNullOrWhiteSpace(email))
         {
-            errors.Add("Email is required against which otp is to be validated");
-
+            otpValidationResult.AddError("Email is required against which otp is to be validated");
         }
         if (string.IsNullOrWhiteSpace(otp))
         {
-            errors.Add($"Please provide the otp which needs to be validated for {email}");
+            otpValidationResult.AddError($"Please provide the otp which needs to be validated for {email}");
         }
 
-        var result = await _otpValidationService.ValidateOtp(email, otp);
+        if (otpValidationResult.Success)
+        {
+            var result = await _otpValidationService.ValidateOtp(email, otp);
+            return result;
+        }
+        return otpValidationResult;
 
-        result.Errors = errors;
-        return result;
 
     }
 

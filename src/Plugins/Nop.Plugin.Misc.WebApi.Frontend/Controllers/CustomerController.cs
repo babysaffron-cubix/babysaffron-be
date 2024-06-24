@@ -481,6 +481,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         if (response.Success == true)
         {
             otpValidationResult.ResultMessage = "Otp is validated";
+            otpValidationResult.StatusCode = StatusCodes.Status200OK;
             var loginOrRegisterResponse = await LoginOrRegister(email);
             return Ok(loginOrRegisterResponse);
         }
@@ -488,6 +489,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         else
         {
             otpValidationResult.ResultMessage = response.Errors[0];
+            otpValidationResult.StatusCode = StatusCodes.Status400BadRequest;
             return Ok(otpValidationResult);
 
         }
