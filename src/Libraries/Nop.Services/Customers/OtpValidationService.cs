@@ -82,6 +82,10 @@ public partial class OtpValidationService : IOtpValidationService
                 {
                     otpValidationResult.AddError("Otp is invalid or expired. Please try with correct otp.");
                 }
+                else
+                {
+                    otpValidationResult.AddError("Something went wrong. Please try again later.");
+                }
             }
             else
             {
