@@ -516,16 +516,22 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     }
 
 
-    private async Task<AuthenticateResponse> LoginUserByEmail(string email, Customer existingCustomer)
+    private async Task<AuthenticateResponseCustom> LoginUserByEmail(string email, Customer existingCustomer)
     {
         var currentCustomer = await _workContext.GetCurrentCustomerAsync();
 
         AuthenticateCustomerRequestEmail authenticateCustomerRequestEmail = new AuthenticateCustomerRequestEmail() { Email = email };
 
         var response = await _authorizationUserService.AuthenticateAsyncByEmail(authenticateCustomerRequestEmail);
+        AuthenticateResponseCustom authenticateResponseCustom = new AuthenticateResponseCustom(response.Token)
+        {
+            CustomerGuid = response.CustomerGuid,
+            CustomerId = response.CustomerId,
+            Username = response.Username
+        };
 
 
-        if (!string.IsNullOrWhiteSpace(response.Token))
+        if (!string.IsNullOrWhiteSpace(authenticateResponseCustom.Token))
         {
             if (currentCustomer?.Id != existingCustomer.Id)
             {
@@ -542,8 +548,8 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             await _customerActivityService.InsertActivityAsync(existingCustomer, "PublicStore.Login",
             await _localizationService.GetResourceAsync("ActivityLog.PublicStore.Login"), existingCustomer);
         }
-
-        return response;
+        authenticateResponseCustom.StatusCode = StatusCodes.Status200OK;
+        return authenticateResponseCustom;
 
         }
 
