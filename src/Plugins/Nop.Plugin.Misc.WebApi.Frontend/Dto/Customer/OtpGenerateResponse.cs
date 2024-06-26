@@ -5,6 +5,6 @@ namespace Nop.Plugin.Misc.WebApi.Frontend.Dto.Customer;
 public partial class OtpRelatedResponse
 {
 	public string ResultMessage { get; set; }
-	public int StatusCode { get; set; }
+	public int status_code { get; set; }
 }
 
