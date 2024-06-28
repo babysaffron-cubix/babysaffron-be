@@ -54,6 +54,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Remove="Plugins\Misc.WebApi.Frontend\Nop.Plugin.Misc.WebApi.Frontend.deps.json" />
+    <None Remove="Plugins\Misc.WebApi.Frontend\Nop.Plugin.Misc.WebApi.Frontend.deps.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -67,6 +68,9 @@
 
   <!-- This target execute after "Build" target.
     We use it to clean up folder with plugins from unnecessary and obsolete libraries. -->
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.6" />
+  </ItemGroup>
   <Target Name="NopTarget" AfterTargets="Build">
     <ItemGroup>
       <!-- Get plugin description files to get plugin paths -->

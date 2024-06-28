@@ -2,6 +2,7 @@
 using DocumentFormat.OpenXml.EMMA;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json.Linq;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
@@ -97,6 +98,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     private static readonly char[] _separator = [','];
 
     private readonly IAuthorizationUserService _authorizationUserService;
+    public HttpClient _httpClient;
 
 
     #endregion
@@ -146,7 +148,8 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         LocalizationSettings localizationSettings,
         MediaSettings mediaSettings,
         TaxSettings taxSettings,
-        IAuthorizationUserService authorizationUserService)
+        IAuthorizationUserService authorizationUserService,
+        HttpClient httpClient)
     {
         _addressSettings = addressSettings;
         _captchaSettings = captchaSettings;
@@ -192,6 +195,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         _mediaSettings = mediaSettings;
         _taxSettings = taxSettings;
         _authorizationUserService = authorizationUserService;
+        _httpClient = httpClient;
     }
 
     #endregion
@@ -581,6 +585,25 @@ public partial class CustomerController : BaseNopWebApiFrontendController
 
     }
 
+
+    [HttpPost]
+    [ProducesResponseType(typeof(AuthenticateResponse), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> LoginByGoogle([FromBody] GoogleLoginRequest request)
+    {
+        var myresponse = await _httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={request.Token}");
+        if (myresponse.IsSuccessStatusCode)
+        {
+            var content = await myresponse.Content.ReadAsStringAsync();
+            var jsonResponse = JObject.Parse(content);
+            var emailFromValidation = jsonResponse["email"].ToString();
+            if(emailFromValidation == request.Email)
+            {
+                var loginOrRegisterResponse = await LoginOrRegister(emailFromValidation);
+                return Ok(loginOrRegisterResponse);
+            }
+        }
+        return Unauthorized("Login failed. Invalid token.");
+    }
 
 
     /// <summary>
