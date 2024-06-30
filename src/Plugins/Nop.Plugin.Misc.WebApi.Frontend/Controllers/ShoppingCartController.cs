@@ -1063,11 +1063,17 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
         var store = await _storeContext.GetCurrentStoreAsync();
         var cart = await _shoppingCartService.GetShoppingCartAsync(customer, ShoppingCartType.ShoppingCart, store.Id);
 
-        //get identifiers of items to remove
-        var itemIdsToRemove = form["removefromcart"]
-            .Split(_separator, StringSplitOptions.RemoveEmptyEntries)
-            .Select(idString => int.TryParse(idString, out var id) ? id : 0)
-            .Distinct().ToList();
+        var itemIdsToRemove = new List<int>();
+        if (form.ContainsKey("removefromcart"))
+        {
+            //get identifiers of items to remove
+            itemIdsToRemove = form["removefromcart"]
+                .Split(_separator, StringSplitOptions.RemoveEmptyEntries)
+                .Select(idString => int.TryParse(idString, out var id) ? id : 0)
+                .Distinct().ToList();
+        }
+
+        
 
         var products = (await _productService.GetProductsByIdsAsync(cart.Select(item => item.ProductId).Distinct().ToArray()))
             .ToDictionary(item => item.Id, item => item);
@@ -1105,7 +1111,7 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
         cart = await _shoppingCartService.GetShoppingCartAsync(customer, ShoppingCartType.ShoppingCart, store.Id);
 
         //parse and save checkout attributes
-        await ParseAndSaveCheckoutAttributesAsync(cart, form);
+        //await ParseAndSaveCheckoutAttributesAsync(cart, form);
 
         //prepare request
         var model = new ShoppingCartModel();
