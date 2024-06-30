@@ -53,8 +53,6 @@
     <None Update="Areas\Admin\sitemap.config">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Remove="Plugins\Misc.WebApi.Frontend\Nop.Plugin.Misc.WebApi.Frontend.deps.json" />
-    <None Remove="Plugins\Misc.WebApi.Frontend\Nop.Plugin.Misc.WebApi.Frontend.deps.json" />
   </ItemGroup>
 
   <ItemGroup>
