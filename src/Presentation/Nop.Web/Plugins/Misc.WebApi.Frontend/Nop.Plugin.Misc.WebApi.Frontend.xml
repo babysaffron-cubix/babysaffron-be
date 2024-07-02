@@ -585,7 +585,7 @@
             Prepare the customer info model
             </summary>
         </member>
-        <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.CustomerController.Info(Nop.Plugin.Misc.WebApi.Frontend.Dto.BaseModelDtoRequest{Nop.Plugin.Misc.WebApi.Frontend.Dto.Customer.CustomerInfoModelDto})">
+        <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.CustomerController.Info(Nop.Plugin.Misc.WebApi.Frontend.Dto.Customer.CustomerUpdateRequestModelDto)">
             <summary>
             Customer info
             </summary>

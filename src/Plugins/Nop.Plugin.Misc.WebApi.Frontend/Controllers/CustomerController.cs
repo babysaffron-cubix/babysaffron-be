@@ -1331,180 +1331,209 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     [HttpPost]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(InfoResponse), StatusCodes.Status200OK)]
-    public virtual async Task<IActionResult> Info([FromBody] BaseModelDtoRequest<CustomerInfoModelDto> request)
+    public virtual async Task<IActionResult> Info([FromBody] CustomerUpdateRequestModelDto request)
     {
         var customer = await _workContext.GetCurrentCustomerAsync();
 
         if (!await _customerService.IsRegisteredAsync(customer))
             return BadRequest("Customer is not registered.");
 
-        var oldCustomerModel = new CustomerInfoModel();
+        #region OldInfoCode
 
-        //get customer info model before changes for gdpr log
-        if (_gdprSettings.GdprEnabled & _gdprSettings.LogUserProfileChanges)
-            oldCustomerModel = await _customerModelFactory.PrepareCustomerInfoModelAsync(oldCustomerModel, customer, false);
+        //var oldCustomerModel = new CustomerInfoModel();
 
-        //custom customer attributes
-        var customerAttributesXml = await ParseCustomCustomerAttributesAsync(request.Form);
-        var customerAttributeWarnings = await _customerAttributeParser.GetAttributeWarningsAsync(customerAttributesXml);
+        ////get customer info model before changes for gdpr log
+        //if (_gdprSettings.GdprEnabled & _gdprSettings.LogUserProfileChanges)
+        //    oldCustomerModel = await _customerModelFactory.PrepareCustomerInfoModelAsync(oldCustomerModel, customer, false);
 
-        var errors = new List<string>();
-        errors.AddRange(customerAttributeWarnings);
+        ////custom customer attributes
+        //var customerAttributesXml = await ParseCustomCustomerAttributesAsync(request.Form);
+        //var customerAttributeWarnings = await _customerAttributeParser.GetAttributeWarningsAsync(customerAttributesXml);
 
-        //GDPR
-        if (_gdprSettings.GdprEnabled)
-        {
-            var consents = (await _gdprService
-                .GetAllConsentsAsync()).Where(consent => consent.DisplayOnCustomerInfoPage && consent.IsRequired).ToList();
+        //var errors = new List<string>();
+        //errors.AddRange(customerAttributeWarnings);
 
-            ValidateRequiredConsents(consents, request.Form);
-        }
+        ////GDPR
+        //if (_gdprSettings.GdprEnabled)
+        //{
+        //    var consents = (await _gdprService
+        //        .GetAllConsentsAsync()).Where(consent => consent.DisplayOnCustomerInfoPage && consent.IsRequired).ToList();
 
-        var model = request.Model.FromDto<CustomerInfoModel>();
+        //    ValidateRequiredConsents(consents, request.Form);
+        //}
+
+        //var model = request.Model.FromDto<CustomerInfoModel>();
+
+        //try
+        //{
+        //    //username 
+        //    if (_customerSettings.UsernamesEnabled && _customerSettings.AllowUsersToChangeUsernames)
+        //    {
+        //        var userName = model.Username;
+        //        if (!customer.Username.Equals(userName, StringComparison.InvariantCultureIgnoreCase))
+        //        {
+        //            //change username
+        //            await _customerRegistrationService.SetUsernameAsync(customer, userName);
+
+        //            //re-authenticate
+        //            //do not authenticate users in impersonation mode
+        //            if (_workContext.OriginalCustomerIfImpersonated == null)
+        //                await _authenticationService.SignInAsync(customer, true);
+        //        }
+        //    }
+        //    //email
+        //    var email = model.Email;
+        //    if (!customer.Email.Equals(email, StringComparison.InvariantCultureIgnoreCase))
+        //    {
+        //        //change email
+        //        var requireValidation = _customerSettings.UserRegistrationType == UserRegistrationType.EmailValidation;
+        //        await _customerRegistrationService.SetEmailAsync(customer, email, requireValidation);
+
+        //        //do not authenticate users in impersonation mode
+        //        if (_workContext.OriginalCustomerIfImpersonated == null)
+        //            //re-authenticate (if usernames are disabled)
+        //            if (!_customerSettings.UsernamesEnabled && !requireValidation)
+        //                await _authenticationService.SignInAsync(customer, true);
+        //    }
+
+        //    //properties
+        //    if (_dateTimeSettings.AllowCustomersToSetTimeZone)
+        //        customer.TimeZoneId = model.TimeZoneId;
+        //    //VAT number
+        //    if (_taxSettings.EuVatEnabled)
+        //    {
+        //        var prevVatNumber = customer.VatNumber;
+
+        //        customer.VatNumber = model.VatNumber;
+
+        //        if (prevVatNumber != model.VatNumber)
+        //        {
+        //            var (vatNumberStatus, _, vatAddress) = await _taxService.GetVatNumberStatusAsync(model.VatNumber);
+        //            customer.VatNumberStatusId = (int)vatNumberStatus;
+        //            //send VAT number admin notification
+        //            if (!string.IsNullOrEmpty(model.VatNumber) && _taxSettings.EuVatEmailAdminWhenNewVatSubmitted)
+        //                await _workflowMessageService.SendNewVatSubmittedStoreOwnerNotificationAsync(customer,
+        //                    model.VatNumber, vatAddress, _localizationSettings.DefaultAdminLanguageId);
+        //        }
+        //    }
+
+        //    //form fields
+        //    if (_customerSettings.GenderEnabled)
+        //        customer.Gender = model.Gender;
+        //    if (_customerSettings.FirstNameEnabled)
+        //        customer.FirstName = model.FirstName;
+        //    if (_customerSettings.LastNameEnabled)
+        //        customer.LastName = model.LastName;
+        //    if (_customerSettings.DateOfBirthEnabled)
+        //        customer.DateOfBirth = model.ParseDateOfBirth();
+        //    if (_customerSettings.CompanyEnabled)
+        //        customer.Company = model.Company;
+        //    if (_customerSettings.StreetAddressEnabled)
+        //        customer.StreetAddress = model.StreetAddress;
+        //    if (_customerSettings.StreetAddress2Enabled)
+        //        customer.StreetAddress2 = model.StreetAddress2;
+        //    if (_customerSettings.ZipPostalCodeEnabled)
+        //        customer.ZipPostalCode = model.ZipPostalCode;
+        //    if (_customerSettings.CityEnabled)
+        //        customer.City = model.City;
+        //    if (_customerSettings.CountyEnabled)
+        //        customer.County = model.County;
+        //    if (_customerSettings.CountryEnabled)
+        //        customer.CountryId = model.CountryId;
+        //    if (_customerSettings.CountryEnabled && _customerSettings.StateProvinceEnabled)
+        //        customer.StateProvinceId = model.StateProvinceId;
+        //    if (_customerSettings.PhoneEnabled)
+        //        customer.Phone = model.Phone;
+        //    if (_customerSettings.FaxEnabled)
+        //        customer.Fax = model.Fax;
+
+        //    customer.CustomCustomerAttributesXML = customerAttributesXml;
+        //    await _customerService.UpdateCustomerAsync(customer);
+
+        //    var store = await _storeContext.GetCurrentStoreAsync();
+
+        //    //newsletter
+        //    if (_customerSettings.NewsletterEnabled)
+        //    {
+        //        //save newsletter value
+        //        var newsletter = await _newsLetterSubscriptionService.GetNewsLetterSubscriptionByEmailAndStoreIdAsync(customer.Email, store.Id);
+        //        if (newsletter != null)
+        //        {
+        //            if (model.Newsletter)
+        //            {
+        //                newsletter.Active = true;
+        //                await _newsLetterSubscriptionService.UpdateNewsLetterSubscriptionAsync(newsletter);
+        //            }
+        //            else
+        //                await _newsLetterSubscriptionService.DeleteNewsLetterSubscriptionAsync(newsletter);
+        //        }
+        //        else
+        //        {
+        //            if (model.Newsletter)
+        //                await _newsLetterSubscriptionService.InsertNewsLetterSubscriptionAsync(new NewsLetterSubscription
+        //                {
+        //                    NewsLetterSubscriptionGuid = Guid.NewGuid(),
+        //                    Email = customer.Email,
+        //                    Active = true,
+        //                    StoreId = store.Id,
+        //                    CreatedOnUtc = DateTime.UtcNow
+        //                });
+        //        }
+        //    }
+
+        //    if (_forumSettings.ForumsEnabled && _forumSettings.SignaturesEnabled)
+        //        await _genericAttributeService.SaveAttributeAsync(customer, NopCustomerDefaults.SignatureAttribute, model.Signature);
+
+        //    //GDPR
+        //    if (_gdprSettings.GdprEnabled)
+        //        await LogGdprAsync(customer, oldCustomerModel, model, request.Form);
+
+        //    return Ok(new InfoResponse
+        //    {
+        //        Errors = errors,
+        //        Model = model.ToDto<CustomerInfoModelDto>()
+        //    });
+        //}
+        //catch (Exception exc)
+        //{
+        //    errors.Add(exc.Message);
+        //}
+
+        ////If we got this far, something failed, redisplay form
+        //model = await _customerModelFactory.PrepareCustomerInfoModelAsync(model, customer, true, customerAttributesXml);
+
+        //return Ok(new InfoResponse
+        //{
+        //    Errors = errors,
+        //    Model = model.ToDto<CustomerInfoModelDto>()
+        //});
+        #endregion
 
         try
         {
-            //username 
-            if (_customerSettings.UsernamesEnabled && _customerSettings.AllowUsersToChangeUsernames)
-            {
-                var userName = model.Username;
-                if (!customer.Username.Equals(userName, StringComparison.InvariantCultureIgnoreCase))
-                {
-                    //change username
-                    await _customerRegistrationService.SetUsernameAsync(customer, userName);
 
-                    //re-authenticate
-                    //do not authenticate users in impersonation mode
-                    if (_workContext.OriginalCustomerIfImpersonated == null)
-                        await _authenticationService.SignInAsync(customer, true);
-                }
-            }
-            //email
-            var email = model.Email;
-            if (!customer.Email.Equals(email, StringComparison.InvariantCultureIgnoreCase))
-            {
-                //change email
-                var requireValidation = _customerSettings.UserRegistrationType == UserRegistrationType.EmailValidation;
-                await _customerRegistrationService.SetEmailAsync(customer, email, requireValidation);
-
-                //do not authenticate users in impersonation mode
-                if (_workContext.OriginalCustomerIfImpersonated == null)
-                    //re-authenticate (if usernames are disabled)
-                    if (!_customerSettings.UsernamesEnabled && !requireValidation)
-                        await _authenticationService.SignInAsync(customer, true);
-            }
-
-            //properties
-            if (_dateTimeSettings.AllowCustomersToSetTimeZone)
-                customer.TimeZoneId = model.TimeZoneId;
-            //VAT number
-            if (_taxSettings.EuVatEnabled)
-            {
-                var prevVatNumber = customer.VatNumber;
-
-                customer.VatNumber = model.VatNumber;
-
-                if (prevVatNumber != model.VatNumber)
-                {
-                    var (vatNumberStatus, _, vatAddress) = await _taxService.GetVatNumberStatusAsync(model.VatNumber);
-                    customer.VatNumberStatusId = (int)vatNumberStatus;
-                    //send VAT number admin notification
-                    if (!string.IsNullOrEmpty(model.VatNumber) && _taxSettings.EuVatEmailAdminWhenNewVatSubmitted)
-                        await _workflowMessageService.SendNewVatSubmittedStoreOwnerNotificationAsync(customer,
-                            model.VatNumber, vatAddress, _localizationSettings.DefaultAdminLanguageId);
-                }
-            }
-
-            //form fields
-            if (_customerSettings.GenderEnabled)
-                customer.Gender = model.Gender;
-            if (_customerSettings.FirstNameEnabled)
-                customer.FirstName = model.FirstName;
-            if (_customerSettings.LastNameEnabled)
-                customer.LastName = model.LastName;
-            if (_customerSettings.DateOfBirthEnabled)
-                customer.DateOfBirth = model.ParseDateOfBirth();
-            if (_customerSettings.CompanyEnabled)
-                customer.Company = model.Company;
-            if (_customerSettings.StreetAddressEnabled)
-                customer.StreetAddress = model.StreetAddress;
-            if (_customerSettings.StreetAddress2Enabled)
-                customer.StreetAddress2 = model.StreetAddress2;
-            if (_customerSettings.ZipPostalCodeEnabled)
-                customer.ZipPostalCode = model.ZipPostalCode;
-            if (_customerSettings.CityEnabled)
-                customer.City = model.City;
-            if (_customerSettings.CountyEnabled)
-                customer.County = model.County;
-            if (_customerSettings.CountryEnabled)
-                customer.CountryId = model.CountryId;
-            if (_customerSettings.CountryEnabled && _customerSettings.StateProvinceEnabled)
-                customer.StateProvinceId = model.StateProvinceId;
-            if (_customerSettings.PhoneEnabled)
-                customer.Phone = model.Phone;
-            if (_customerSettings.FaxEnabled)
-                customer.Fax = model.Fax;
-
-            customer.CustomCustomerAttributesXML = customerAttributesXml;
-            await _customerService.UpdateCustomerAsync(customer);
-
-            var store = await _storeContext.GetCurrentStoreAsync();
-
-            //newsletter
-            if (_customerSettings.NewsletterEnabled)
-            {
-                //save newsletter value
-                var newsletter = await _newsLetterSubscriptionService.GetNewsLetterSubscriptionByEmailAndStoreIdAsync(customer.Email, store.Id);
-                if (newsletter != null)
-                {
-                    if (model.Newsletter)
-                    {
-                        newsletter.Active = true;
-                        await _newsLetterSubscriptionService.UpdateNewsLetterSubscriptionAsync(newsletter);
-                    }
-                    else
-                        await _newsLetterSubscriptionService.DeleteNewsLetterSubscriptionAsync(newsletter);
-                }
-                else
-                {
-                    if (model.Newsletter)
-                        await _newsLetterSubscriptionService.InsertNewsLetterSubscriptionAsync(new NewsLetterSubscription
-                        {
-                            NewsLetterSubscriptionGuid = Guid.NewGuid(),
-                            Email = customer.Email,
-                            Active = true,
-                            StoreId = store.Id,
-                            CreatedOnUtc = DateTime.UtcNow
-                        });
-                }
-            }
-
-            if (_forumSettings.ForumsEnabled && _forumSettings.SignaturesEnabled)
-                await _genericAttributeService.SaveAttributeAsync(customer, NopCustomerDefaults.SignatureAttribute, model.Signature);
-
-            //GDPR
-            if (_gdprSettings.GdprEnabled)
-                await LogGdprAsync(customer, oldCustomerModel, model, request.Form);
-
-            return Ok(new InfoResponse
-            {
-                Errors = errors,
-                Model = model.ToDto<CustomerInfoModelDto>()
-            });
-        }
-        catch (Exception exc)
+        if (string.IsNullOrEmpty(request.FirstName))
         {
-            errors.Add(exc.Message);
+            return BadRequest("First Name cannot be empty.");
+        }
+        if (string.IsNullOrEmpty(request.Phone))
+        {
+            return BadRequest("Phone cannot be empty.");
         }
 
-        //If we got this far, something failed, redisplay form
-        model = await _customerModelFactory.PrepareCustomerInfoModelAsync(model, customer, true, customerAttributesXml);
+        customer.FirstName = request.FirstName;
+        customer.LastName = request.LastName;
+        customer.CountryId = request.CountryId;
+        customer.Phone = request.Phone;
 
-        return Ok(new InfoResponse
+        await _customerService.UpdateCustomerAsync(customer);
+
+        return Ok();
+        }
+        catch (Exception ex)
         {
-            Errors = errors,
-            Model = model.ToDto<CustomerInfoModelDto>()
-        });
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>
