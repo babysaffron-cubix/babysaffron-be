@@ -6,6 +6,10 @@
     {
       "SystemName": "Misc.WebApi.Frontend",
       "Version": "4.70.1"
+    },
+    {
+      "SystemName": "Misc.WebApi.Backend",
+      "Version": "4.70.1"
     }
   ],
   "PluginNamesToUninstall": [],
