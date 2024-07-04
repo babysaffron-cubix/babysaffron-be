@@ -1338,7 +1338,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         if (!await _customerService.IsRegisteredAsync(customer))
             return BadRequest("Customer is not registered.");
 
-        #region OldInfoCode
+        #region OldInfoCode-Commented
 
         //var oldCustomerModel = new CustomerInfoModel();
 
@@ -1528,7 +1528,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
 
         await _customerService.UpdateCustomerAsync(customer);
 
-        return Ok();
+        return Ok(new { response = "Customer Info updated succesfully." });
         }
         catch (Exception ex)
         {
