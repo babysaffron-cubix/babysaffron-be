@@ -264,6 +264,7 @@ public partial class NopStartup : INopStartup
         services.AddSingleton<IOtpSenderService, EmailOtpSenderService>();
         services.AddSingleton<IOtpGeneratorService, OtpGeneratorService>();
         services.AddSingleton<IOtpValidationService, OtpValidationService>();
+        services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
 
         
 
