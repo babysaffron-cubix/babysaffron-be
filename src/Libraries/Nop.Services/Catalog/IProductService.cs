@@ -82,6 +82,17 @@ public partial interface IProductService
     /// </returns>
     Task<Product> GetProductByIdAsync(int productId);
 
+
+    /// <summary>
+    /// Gets product
+    /// </summary>
+    /// <param name="seoFriendlyName">SEO friednly name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the product
+    /// </returns>
+    Task<Product> GetProductBySeoFriendlyNameAsync(string seoFriendlyName);
+
     /// <summary>
     /// Gets products by identifier
     /// </summary>

@@ -572,6 +572,23 @@ public partial class ProductController : BaseNopWebApiFrontendController
         return Ok(response);
     }
 
+
+
+    [HttpGet("{seoFriendlyName}")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProductDetailsResponse), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> GetProductBySeoFriendlyNameAsync(string seoFriendlyName)
+    {
+        if (!String.IsNullOrEmpty(seoFriendlyName))
+        {
+            var products = await _productService.GetProductBySeoFriendlyNameAsync(seoFriendlyName);
+            return Ok(products);
+        }
+        return BadRequest();
+        
+    }
+
     /// <summary>
     /// Get the estimate shipping
     /// </summary>
