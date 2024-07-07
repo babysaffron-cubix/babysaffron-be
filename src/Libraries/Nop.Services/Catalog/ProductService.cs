@@ -7,6 +7,7 @@ using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Discounts;
 using Nop.Core.Domain.Localization;
 using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Seo;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Stores;
 using Nop.Core.Infrastructure;
@@ -58,6 +59,7 @@ public partial class ProductService : IProductService
     protected readonly IRepository<Shipment> _shipmentRepository;
     protected readonly IRepository<StockQuantityHistory> _stockQuantityHistoryRepository;
     protected readonly IRepository<TierPrice> _tierPriceRepository;
+    protected readonly IRepository<UrlRecord> _urlRecord;
     protected readonly ISearchPluginManager _searchPluginManager;
     protected readonly IStaticCacheManager _staticCacheManager;
     protected readonly IStoreMappingService _storeMappingService;
@@ -106,7 +108,8 @@ public partial class ProductService : IProductService
         IStoreService storeService,
         IStoreMappingService storeMappingService,
         IWorkContext workContext,
-        LocalizationSettings localizationSettings)
+        LocalizationSettings localizationSettings,
+        IRepository<UrlRecord> urlRecord)
     {
         _catalogSettings = catalogSettings;
         _commonSettings = commonSettings;
@@ -145,6 +148,7 @@ public partial class ProductService : IProductService
         _storeService = storeService;
         _workContext = workContext;
         _localizationSettings = localizationSettings;
+        _urlRecord = urlRecord;
     }
 
     #endregion
@@ -591,6 +595,21 @@ public partial class ProductService : IProductService
     public virtual async Task<Product> GetProductByIdAsync(int productId)
     {
         return await _productRepository.GetByIdAsync(productId, cache => default);
+    }
+
+
+
+    public virtual async Task<Product> GetProductBySeoFriendlyNameAsync(string seoFriendlyName)
+    {
+        var urlRecord = _urlRecord.Table.Where(x => x.Slug.ToUpper() == seoFriendlyName.ToUpper()).Select(x=>x).FirstOrDefault();
+
+        if(urlRecord != null)
+        {
+            return await _productRepository.GetByIdAsync(urlRecord.EntityId, cache => default);
+        }
+
+        return new Product();
+        
     }
 
     /// <summary>
