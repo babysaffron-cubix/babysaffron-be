@@ -801,11 +801,11 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// </summary>
     /// <param name="orderId">Input order id</param>
     /// <returns></returns>
-    public virtual async Task<PlaceOrderResult> MarkPaymentStatusAsPaid(int orderId)
+    public virtual async Task<PlaceOrderResult> MarkPaymentStatusAsPaid(RazorpayPaymentSaveRequest razorpayPaymentSaveRequest)
     {
         var placeOrderResult = new PlaceOrderResult();
 
-        var order = await _orderService.GetOrderByIdAsync(orderId);
+        var order = await _orderService.GetOrderByIdAsync(razorpayPaymentSaveRequest.BabySaffronOrderId);
         try
         {
 
@@ -815,6 +815,7 @@ public partial class OrderProcessingService : IOrderProcessingService
             // update order Payment Status
             order.PaymentStatusId = (int)PaymentStatus.Paid;
             order.PaymentMethodSystemName = "RazorPay";
+            order.CardName = razorpayPaymentSaveRequest.RazorpayPaymentId;
             await _orderService.UpdateOrderAsync(order);
             placeOrderResult.PlacedOrder = order;
 

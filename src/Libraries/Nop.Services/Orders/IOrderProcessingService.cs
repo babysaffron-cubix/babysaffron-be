@@ -345,5 +345,5 @@ public partial interface IOrderProcessingService
     /// </summary>
     /// <param name="orderId">The order id</param>
     /// <returns></returns>
-    Task<PlaceOrderResult> MarkPaymentStatusAsPaid(int orderId);
+    Task<PlaceOrderResult> MarkPaymentStatusAsPaid(RazorpayPaymentSaveRequest razorpayPaymentSaveRequest);
 }

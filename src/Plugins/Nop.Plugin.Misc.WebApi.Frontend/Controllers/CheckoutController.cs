@@ -1257,11 +1257,11 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
 
     [HttpPost]
     [ProducesResponseType(typeof(PlaceOrderResult), StatusCodes.Status200OK)]
-    public virtual async Task<IActionResult> MarkPaymentStatusAsPaid(int orderId)
+    public virtual async Task<IActionResult> MarkPaymentStatusAsPaid([FromBody] RazorpayPaymentSaveRequest razorpayPaymentSaveRequest)
     {
         try
         {
-            var response = await _orderProcessingService.MarkPaymentStatusAsPaid(orderId);
+            var response = await _orderProcessingService.MarkPaymentStatusAsPaid(razorpayPaymentSaveRequest);
             return Ok(response);
         }
         catch (Exception ex)
