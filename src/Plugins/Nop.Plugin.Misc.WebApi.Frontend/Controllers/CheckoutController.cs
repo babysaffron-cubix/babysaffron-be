@@ -1224,19 +1224,19 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
             {
                 await _checkoutService.ClearPaymentInfoAsync();
 
-                var paymentMethod = await _paymentPluginManager
-                    .LoadPluginBySystemNameAsync(placeOrderResult.PlacedOrder.PaymentMethodSystemName, customer, store.Id);
+                //var paymentMethod = await _paymentPluginManager
+                //    .LoadPluginBySystemNameAsync(placeOrderResult.PlacedOrder.PaymentMethodSystemName, customer, store.Id);
 
-                if (paymentMethod?.PaymentMethodType == PaymentMethodType.Redirection)
-                    //should be redirected
-                    return Ok(new ConfirmOrderResponse { RedirectToMethod = "Redirect", Id = placeOrderResult.PlacedOrder.Id });
+                //if (paymentMethod?.PaymentMethodType == PaymentMethodType.Redirection)
+                //    //should be redirected
+                //    return Ok(new ConfirmOrderResponse { RedirectToMethod = "Redirect", Id = placeOrderResult.PlacedOrder.Id });
 
-                var postProcessPaymentRequest = new PostProcessPaymentRequest
-                {
-                    Order = placeOrderResult.PlacedOrder
-                };
+                //var postProcessPaymentRequest = new PostProcessPaymentRequest
+                //{
+                //    Order = placeOrderResult.PlacedOrder
+                //};
 
-                await _paymentService.PostProcessPaymentAsync(postProcessPaymentRequest);
+                //await _paymentService.PostProcessPaymentAsync(postProcessPaymentRequest);
 
                 return Ok(new ConfirmOrderResponse { RedirectToMethod = "Completed", Id = placeOrderResult.PlacedOrder.Id });
             }
@@ -1252,6 +1252,22 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
 
         //if we got this far, something failed
         return Ok(new ConfirmOrderResponse { Model = model.ToDto<CheckoutConfirmModelDto>() });
+    }
+
+
+    [HttpPost]
+    [ProducesResponseType(typeof(PlaceOrderResult), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> MarkPaymentStatusAsPaid(int orderId)
+    {
+        try
+        {
+            var response = await _orderProcessingService.MarkPaymentStatusAsPaid(orderId);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
     }
 
     /// <summary>
