@@ -347,17 +347,19 @@ public partial class OrderProcessingService : IOrderProcessingService
         details.OrderSubTotalDiscountExclTax = discountAmountExclTax;
 
         //shipping total
-        var (orderShippingTotalInclTax, orderShippingTotalExclTax, _, shippingTotalDiscounts) = await _orderTotalCalculationService.GetShoppingCartShippingTotalsAsync(details.Cart);
+        //var (orderShippingTotalInclTax, orderShippingTotalExclTax, _, shippingTotalDiscounts) = await _orderTotalCalculationService.GetShoppingCartShippingTotalsAsync(details.Cart);
 
-        if (!orderShippingTotalInclTax.HasValue || !orderShippingTotalExclTax.HasValue)
-            throw new NopException("Shipping total couldn't be calculated");
+        //if (!orderShippingTotalInclTax.HasValue || !orderShippingTotalExclTax.HasValue)
+        //    throw new NopException("Shipping total couldn't be calculated");
 
-        details.OrderShippingTotalInclTax = orderShippingTotalInclTax.Value;
-        details.OrderShippingTotalExclTax = orderShippingTotalExclTax.Value;
+        details.OrderShippingTotalInclTax = 0;
+        //orderShippingTotalInclTax.Value;
+        details.OrderShippingTotalExclTax = 0;
+        //orderShippingTotalExclTax.Value;
 
-        foreach (var disc in shippingTotalDiscounts)
-            if (!_discountService.ContainsDiscount(details.AppliedDiscounts, disc))
-                details.AppliedDiscounts.Add(disc);
+        //foreach (var disc in shippingTotalDiscounts)
+        //    if (!_discountService.ContainsDiscount(details.AppliedDiscounts, disc))
+        //        details.AppliedDiscounts.Add(disc);
 
         //payment total
         var paymentAdditionalFee = await _paymentService.GetAdditionalHandlingFeeAsync(details.Cart, processPaymentRequest.PaymentMethodSystemName);
@@ -729,22 +731,22 @@ public partial class OrderProcessingService : IOrderProcessingService
             CurrencyRate = details.CustomerCurrencyRate,
             AffiliateId = details.AffiliateId,
             OrderStatus = OrderStatus.Pending,
-            AllowStoringCreditCardNumber = processPaymentResult.AllowStoringCreditCardNumber,
-            CardType = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardType) : string.Empty,
-            CardName = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardName) : string.Empty,
-            CardNumber = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardNumber) : string.Empty,
-            MaskedCreditCardNumber = _encryptionService.EncryptText(_paymentService.GetMaskedCreditCardNumber(processPaymentRequest.CreditCardNumber)),
-            CardCvv2 = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardCvv2) : string.Empty,
-            CardExpirationMonth = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardExpireMonth.ToString()) : string.Empty,
-            CardExpirationYear = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardExpireYear.ToString()) : string.Empty,
-            PaymentMethodSystemName = processPaymentRequest.PaymentMethodSystemName,
-            AuthorizationTransactionId = processPaymentResult.AuthorizationTransactionId,
-            AuthorizationTransactionCode = processPaymentResult.AuthorizationTransactionCode,
-            AuthorizationTransactionResult = processPaymentResult.AuthorizationTransactionResult,
-            CaptureTransactionId = processPaymentResult.CaptureTransactionId,
-            CaptureTransactionResult = processPaymentResult.CaptureTransactionResult,
-            SubscriptionTransactionId = processPaymentResult.SubscriptionTransactionId,
-            PaymentStatus = processPaymentResult.NewPaymentStatus,
+            //AllowStoringCreditCardNumber = processPaymentResult.AllowStoringCreditCardNumber,
+            //CardType = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardType) : string.Empty,
+            //CardName = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardName) : string.Empty,
+            //CardNumber = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardNumber) : string.Empty,
+            //MaskedCreditCardNumber = _encryptionService.EncryptText(_paymentService.GetMaskedCreditCardNumber(processPaymentRequest.CreditCardNumber)),
+            //CardCvv2 = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardCvv2) : string.Empty,
+            //CardExpirationMonth = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardExpireMonth.ToString()) : string.Empty,
+            //CardExpirationYear = processPaymentResult.AllowStoringCreditCardNumber ? _encryptionService.EncryptText(processPaymentRequest.CreditCardExpireYear.ToString()) : string.Empty,
+            //PaymentMethodSystemName = processPaymentRequest.PaymentMethodSystemName,
+            //AuthorizationTransactionId = processPaymentResult.AuthorizationTransactionId,
+            //AuthorizationTransactionCode = processPaymentResult.AuthorizationTransactionCode,
+            //AuthorizationTransactionResult = processPaymentResult.AuthorizationTransactionResult,
+            //CaptureTransactionId = processPaymentResult.CaptureTransactionId,
+            //CaptureTransactionResult = processPaymentResult.CaptureTransactionResult,
+            //SubscriptionTransactionId = processPaymentResult.SubscriptionTransactionId,
+            PaymentStatus = PaymentStatus.Pending,
             PaidDateUtc = null,
             PickupInStore = details.PickupInStore,
             ShippingStatus = details.ShippingStatus,
@@ -791,6 +793,40 @@ public partial class OrderProcessingService : IOrderProcessingService
         await _orderService.UpdateOrderAsync(order);
 
         return order;
+    }
+
+
+    /// <summary>
+    /// Method to mark current order id's payment status as  paid
+    /// </summary>
+    /// <param name="orderId">Input order id</param>
+    /// <returns></returns>
+    public virtual async Task<PlaceOrderResult> MarkPaymentStatusAsPaid(int orderId)
+    {
+        var placeOrderResult = new PlaceOrderResult();
+
+        var order = await _orderService.GetOrderByIdAsync(orderId);
+        try
+        {
+
+       
+        if(order != null)
+        {
+            // update order Payment Status
+            order.PaymentStatusId = (int)PaymentStatus.Paid;
+            order.PaymentMethodSystemName = "RazorPay";
+            await _orderService.UpdateOrderAsync(order);
+            placeOrderResult.PlacedOrder = order;
+
+        }
+
+        }
+        catch (Exception ex)
+        {
+            placeOrderResult.AddError(ex.Message);
+        }
+
+        return placeOrderResult;
     }
 
     /// <summary>
@@ -1528,12 +1564,13 @@ public partial class OrderProcessingService : IOrderProcessingService
             //prepare order details
             var details = await PreparePlaceOrderDetailsAsync(processPaymentRequest);
 
-            var processPaymentResult = await GetProcessPaymentResultAsync(processPaymentRequest, details)
-                                       ?? throw new NopException("processPaymentResult is not available");
+            //var processPaymentResult = await GetProcessPaymentResultAsync(processPaymentRequest, details)
+                                       //?? throw new NopException("processPaymentResult is not available");
 
-            if (processPaymentResult.Success)
-            {
-                var order = await SaveOrderDetailsAsync(processPaymentRequest, processPaymentResult, details);
+
+            //if (processPaymentResult.Success)
+            //{
+                var order = await SaveOrderDetailsAsync(processPaymentRequest, null, details);
                 result.PlacedOrder = order;
 
                 //move shopping cart items to order items
@@ -1563,12 +1600,12 @@ public partial class OrderProcessingService : IOrderProcessingService
                 //check order status
                 await CheckOrderStatusAsync(order);
 
-                if (order.PaymentStatus == PaymentStatus.Paid)
-                    await ProcessOrderPaidAsync(order);
-            }
-            else
-                foreach (var paymentError in processPaymentResult.Errors)
-                    result.AddError(string.Format(await _localizationService.GetResourceAsync("Checkout.PaymentError"), paymentError));
+                //if (order.PaymentStatus == PaymentStatus.Paid)
+            //    //    await ProcessOrderPaidAsync(order);
+            //}
+            //else
+            //    foreach (var paymentError in processPaymentResult.Errors)
+            //        result.AddError(string.Format(await _localizationService.GetResourceAsync("Checkout.PaymentError"), paymentError));
         }
         catch (Exception exc)
         {
@@ -3163,6 +3200,8 @@ public partial class OrderProcessingService : IOrderProcessingService
 
         return result;
     }
+
+   
 
     #endregion
 

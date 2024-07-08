@@ -1385,11 +1385,11 @@ public partial class OrderTotalCalculationService : IOrderTotalCalculationServic
         if (_shoppingCartSettings.RoundPricesDuringCalculation)
             resultTemp = await _priceCalculationService.RoundPriceAsync(resultTemp);
 
-        if (!shoppingCartShipping.HasValue)
-        {
-            //we have errors
-            return (null, discountAmount, appliedDiscounts, appliedGiftCards, redeemedRewardPoints, redeemedRewardPointsAmount);
-        }
+        //if (!shoppingCartShipping.HasValue)
+        //{
+        //    //we have errors
+        //    return (null, discountAmount, appliedDiscounts, appliedGiftCards, redeemedRewardPoints, redeemedRewardPointsAmount);
+        //}
 
         var orderTotal = resultTemp;
 
