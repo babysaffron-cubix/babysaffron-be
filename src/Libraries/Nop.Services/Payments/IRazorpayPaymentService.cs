@@ -5,7 +5,7 @@ namespace Nop.Services.Payments;
 
 public partial interface IRazorpayPaymentService
 {
-    Task<Order> CreateOrder(decimal amount);
+    Task<RazorpayOrderCreationResponse> CreateOrder(int orderId);
 
     Task<string> VerifyPayment(RazorpayPaymentVerificationRequest request);
 }
