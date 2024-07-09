@@ -35,9 +35,9 @@ public class PaymentController : BaseNopWebApiFrontendController
 
     [HttpPost]
     [ProducesResponseType(typeof(String), StatusCodes.Status200OK)]
-    public virtual async Task<IActionResult> CreateRazorpayOrder(decimal amount)
+    public virtual async Task<IActionResult> CreateRazorpayOrder(int dbOrderId)
     {
-        var response = await _razorpayPaymentService.CreateOrder(amount);
+        var response = await _razorpayPaymentService.CreateOrder(dbOrderId);
         return Ok(response);
     }
 
