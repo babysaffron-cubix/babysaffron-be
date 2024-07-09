@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Security.Cryptography;
+using System.Text;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Razorpay.Api;
 namespace Nop.Services.Payments;
@@ -36,23 +38,35 @@ public partial class RazorpayPaymentService : IRazorpayPaymentService
     {
         try
         {
-            var attributes = new Dictionary<string, string>
+
+            bool isSignatureValid = await VerifyRazorpaySignature(request.RazorpayPaymentId, request.RazorpayOrderId, _secret, request.RazorpaySignature);
+
+            if (isSignatureValid)
             {
-                    { "razorpay_order_id", request.RazorpayOrderId },
-                    { "razorpay_payment_id", request.RazorpayPaymentId },
-                    { "razorpay_signature", request.RazorpaySignature }
-                };
+                return "Payment Verified";
+            }
 
-            Utils.verifyPaymentSignature(attributes);
+            return "Payment verification failed.";
 
-            await Task.Run(() => Utils.verifyPaymentSignature(attributes));
-
-            return "Payment Verified";
 
         }
         catch (Exception ex)
         {
             return ex.Message;
+        }
+    }
+
+    public async Task<bool> VerifyRazorpaySignature(string paymentId, string orderId, string secret, string signature)
+    {
+        string payload = $"{orderId}|{paymentId}";
+
+        // Create HMAC-SHA256 signature using secret
+        using (var hmacsha256 = new HMACSHA256(Encoding.UTF8.GetBytes(secret)))
+        {
+            byte[] hashMessage = hmacsha256.ComputeHash(Encoding.UTF8.GetBytes(payload));
+            string expectedSignature = BitConverter.ToString(hashMessage).Replace("-", "").ToLower();
+
+            return expectedSignature.Equals(signature);
         }
     }
 }
