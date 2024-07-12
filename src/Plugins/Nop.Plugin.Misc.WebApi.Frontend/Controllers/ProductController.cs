@@ -1131,4 +1131,22 @@ public partial class ProductController : BaseNopWebApiFrontendController
     }
 
     #endregion
+
+
+    /// <summary>
+    /// Gets a products by SKU array
+    /// </summary>
+    /// <param name="skuArray">SKU array (separator - ;)</param>
+    /// <param name="vendorId">Vendor ID; 0 to load all records</param>
+    [HttpGet]
+    [ProducesResponseType(typeof(IList<ProductOverviewModelDto>), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> GetProductsBySku([FromQuery][Required] string skuArray, [FromQuery] int vendorId = 0)
+    {
+        var products = await _productService.GetProductsBySkuAsync(skuArray.Split(';'), vendorId);
+       
+        var model = (await _productModelFactory.PrepareProductOverviewModelsAsync(products)).ToList();
+        var modelDto = model.Select(p => p.ToDto<ProductOverviewModelDto>()).ToList();
+
+        return Ok(modelDto);
+    }
 }

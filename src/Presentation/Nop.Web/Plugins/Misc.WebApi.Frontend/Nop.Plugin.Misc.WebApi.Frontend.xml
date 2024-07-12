@@ -899,6 +899,13 @@
             Clear compare products list
             </summary>
         </member>
+        <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.ProductController.GetProductsBySku(System.String,System.Int32)">
+            <summary>
+            Gets a products by SKU array
+            </summary>
+            <param name="skuArray">SKU array (separator - ;)</param>
+            <param name="vendorId">Vendor ID; 0 to load all records</param>
+        </member>
         <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.ScheduleTaskController.RunTask(System.String)">
             <summary>
             Run task
