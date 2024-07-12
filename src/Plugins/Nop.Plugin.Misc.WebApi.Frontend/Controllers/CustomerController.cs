@@ -1722,6 +1722,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             await _addressService.InsertAddressAsync(address);
 
             await _customerService.InsertCustomerAddressAsync(customer, address);
+            model.Address.Id = address.Id;
 
             return Ok(new AddressAddResponse()
             {
