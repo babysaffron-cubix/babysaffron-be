@@ -1209,7 +1209,7 @@ namespace Nop.Services.Installation
                 OrderDiscount = decimal.Zero,
                 CheckoutAttributeDescription = string.Empty,
                 CheckoutAttributesXml = string.Empty,
-                CustomerCurrencyCode = "USD",
+                CustomerCurrencyCode = "INR",
                 CurrencyRate = 1M,
                 AffiliateId = 0,
                 OrderStatus = OrderStatus.Processing,
@@ -1385,7 +1385,7 @@ namespace Nop.Services.Installation
                 OrderDiscount = decimal.Zero,
                 CheckoutAttributeDescription = string.Empty,
                 CheckoutAttributesXml = string.Empty,
-                CustomerCurrencyCode = "USD",
+                CustomerCurrencyCode = "INR",
                 CurrencyRate = 1M,
                 AffiliateId = 0,
                 OrderStatus = OrderStatus.Pending,
@@ -1509,7 +1509,7 @@ namespace Nop.Services.Installation
                 OrderDiscount = decimal.Zero,
                 CheckoutAttributeDescription = string.Empty,
                 CheckoutAttributesXml = string.Empty,
-                CustomerCurrencyCode = "USD",
+                CustomerCurrencyCode = "INR",
                 CurrencyRate = 1M,
                 AffiliateId = 0,
                 OrderStatus = OrderStatus.Pending,
@@ -1660,7 +1660,7 @@ namespace Nop.Services.Installation
                 OrderDiscount = decimal.Zero,
                 CheckoutAttributeDescription = string.Empty,
                 CheckoutAttributesXml = string.Empty,
-                CustomerCurrencyCode = "USD",
+                CustomerCurrencyCode = "INR",
                 CurrencyRate = 1M,
                 AffiliateId = 0,
                 OrderStatus = OrderStatus.Processing,
@@ -1885,7 +1885,7 @@ namespace Nop.Services.Installation
                 OrderDiscount = decimal.Zero,
                 CheckoutAttributeDescription = string.Empty,
                 CheckoutAttributesXml = string.Empty,
-                CustomerCurrencyCode = "USD",
+                CustomerCurrencyCode = "INR",
                 CurrencyRate = 1M,
                 AffiliateId = 0,
                 OrderStatus = OrderStatus.Complete,
@@ -3048,7 +3048,7 @@ namespace Nop.Services.Installation
                 PageSize = 10
             });
 
-            var primaryCurrency = "USD";
+            var primaryCurrency = "INR";
             await settingService.SaveSettingAsync(new CurrencySettings
             {
                 DisplayCurrencyLabel = false,
