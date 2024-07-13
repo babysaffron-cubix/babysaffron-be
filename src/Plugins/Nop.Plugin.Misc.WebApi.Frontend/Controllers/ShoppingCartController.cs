@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Nop.Core;
@@ -6,6 +7,7 @@ using Nop.Core.Caching;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Discounts;
 using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Shipping;
@@ -1350,6 +1352,16 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
         model = await _shoppingCartModelFactory.PrepareShoppingCartModelAsync(model, cart);
 
         return Ok(model.ToDto<ShoppingCartModelDto>());
+    }
+
+
+    [HttpGet]
+    [ProducesResponseType(typeof(List<Discount>), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> GetActiveDiscounts()
+    {
+        var discounts = await _shoppingCartService.GetActiveDiscounts();
+
+        return Ok(discounts);
     }
 
     #endregion
