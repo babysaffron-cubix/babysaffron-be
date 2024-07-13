@@ -63,6 +63,7 @@ public partial class ShoppingCartService : IShoppingCartService
     protected readonly IWorkContext _workContext;
     protected readonly OrderSettings _orderSettings;
     protected readonly ShoppingCartSettings _shoppingCartSettings;
+    protected readonly IRepository<Discount> _discountRepository;
 
     #endregion
 
@@ -97,7 +98,8 @@ public partial class ShoppingCartService : IShoppingCartService
         IUrlRecordService urlRecordService,
         IWorkContext workContext,
         OrderSettings orderSettings,
-        ShoppingCartSettings shoppingCartSettings)
+        ShoppingCartSettings shoppingCartSettings,
+        IRepository<Discount> discountRepository)
     {
         _catalogSettings = catalogSettings;
         _aclService = aclService;
@@ -129,6 +131,7 @@ public partial class ShoppingCartService : IShoppingCartService
         _workContext = workContext;
         _orderSettings = orderSettings;
         _shoppingCartSettings = shoppingCartSettings;
+        _discountRepository = discountRepository;
     }
 
     #endregion
@@ -1934,6 +1937,18 @@ public partial class ShoppingCartService : IShoppingCartService
         rezTotalCycles = totalCycles.Value;
 
         return (string.Empty, rezCycleLength, rezCyclePeriod, rezTotalCycles);
+    }
+
+
+    /// <summary>
+    /// To get all the active discounsts
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<Discount>> GetActiveDiscounts()
+    {
+        var activeDiscounts = await _discountRepository.GetAll().Where(x => x.IsActive && x.DiscountTypeId == (int)DiscountType.AssignedToOrderSubTotal).ToListAsync();
+
+        return activeDiscounts;
     }
 
     #endregion

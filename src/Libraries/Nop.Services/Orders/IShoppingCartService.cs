@@ -327,4 +327,6 @@ public partial interface IShoppingCartService
     /// The task result contains the error (if exists); otherwise, empty string
     /// </returns>
     Task<(string error, int cycleLength, RecurringProductCyclePeriod cyclePeriod, int totalCycles)> GetRecurringCycleInfoAsync(IList<ShoppingCartItem> shoppingCart);
+
+    Task<List<Discount>> GetActiveDiscounts();
 }
