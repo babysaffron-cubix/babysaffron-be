@@ -4,7 +4,17 @@ using Nop.Plugin.Misc.WebApi.Framework.Controllers;
 using Nop.Plugin.Misc.WebApi.Framework.Helpers;
 using Nop.Plugin.Misc.WebApi.Framework.Models;
 using Nop.Plugin.Misc.WebApi.Frontend.Models;
+using Nop.Plugin.Misc.WebApi.Framework.Services;
 using Nop.Plugin.Misc.WebApi.Frontend.Services;
+using System;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.AspNetCore.Identity;
+using Nop.Services.Customers;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend.Controllers;
 
@@ -15,15 +25,21 @@ public partial class AuthenticateController : BaseNopWebApiController
     #region Fields
 
     private readonly IAuthorizationUserService _authorizationUserService;
+    private readonly WebApiCommonSettings _webApiCommonSettings;
+    private readonly ICustomerService _customerService;
 
     #endregion
 
     #region Ctor
 
     public AuthenticateController(
-        IAuthorizationUserService authorizationUserService)
+        IAuthorizationUserService authorizationUserService,
+        WebApiCommonSettings webApiCommonSettings,
+        ICustomerService customerService)
     {
         _authorizationUserService = authorizationUserService;
+        _webApiCommonSettings = webApiCommonSettings;
+        _customerService = customerService;
     }
 
     #endregion
@@ -74,13 +90,88 @@ public partial class AuthenticateController : BaseNopWebApiController
     /// <summary>
     /// Gets API version
     /// </summary>
-    [Authorize(true)]
+    [Authorize]
     [HttpGet]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     public IActionResult GetApiVersion()
     {
         return Ok(WebApiCommonDefaults.API_VERSION);
     }
+
+
+    [Authorize(true)]
+    [HttpPost]
+    [ProducesResponseType(typeof(AuthenticateResponse), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest request)
+    {
+        try
+        {
+
+            var principal = GetPrincipalFromExpiredToken(request.Token);
+            if (principal.Identity is ClaimsIdentity identity && identity.Claims.Count() >= 5)
+            {
+                var emailId = identity.Claims.ElementAt(4).Value;
+                if (emailId != null)
+                {
+
+                    var user = await _customerService.GetCustomerByEmailAsync(emailId);
+                    if (user != null)
+                    {
+                        AuthenticateCustomerRequestEmail authenticateCustomerRequestEmail = new AuthenticateCustomerRequestEmail() { Email = emailId };
+                        var response = await _authorizationUserService.AuthenticateAsyncByEmail(authenticateCustomerRequestEmail);
+                        return Ok(response.Token);
+                    }
+                    else
+                    {
+                        return NotFound("User not found.");
+                    }
+                }
+                else
+                {
+                    return NotFound(emailId);
+                }
+
+            }
+            return BadRequest();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest("Invalid token.");
+        }
+
+
+
+    }
+
+
+
+
+
+    private ClaimsPrincipal GetPrincipalFromExpiredToken(string token)
+{
+    var key = Encoding.UTF8.GetBytes(_webApiCommonSettings.SecretKey);
+    var tokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateAudience = false,
+        ValidateIssuer = false,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(key),
+        ValidateLifetime = false // Here we are saying that we don't care about the token's expiration date
+    };
+
+    var tokenHandler = new JwtSecurityTokenHandler();
+    SecurityToken securityToken;
+    var principal = tokenHandler.ValidateToken(token, tokenValidationParameters, out securityToken);
+    var jwtSecurityToken = securityToken as JwtSecurityToken;
+
+    if (jwtSecurityToken == null ||
+        !jwtSecurityToken.Header.Alg.Equals(SecurityAlgorithms.HmacSha256, StringComparison.InvariantCultureIgnoreCase))
+    {
+        throw new SecurityTokenException("Invalid token");
+    }
+
+    return principal;
+}
 
     #endregion
 }
