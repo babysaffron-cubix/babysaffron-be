@@ -2030,11 +2030,13 @@ public partial class ProductModelFactory : IProductModelFactory
                 Name = await _localizationService.GetLocalizedAsync(product, x => x.Name),
                 ShortDescription = await _localizationService.GetLocalizedAsync(product, x => x.ShortDescription),
                 FullDescription = await _localizationService.GetLocalizedAsync(product, x => x.FullDescription),
-                Sku = product.Sku,
-                Price = await _priceFormatter.FormatPriceAsync(product.Price)
+                Sku = product.Sku
             };
 
             model.PictureModels = await PrepareProductOverviewPicturesModelAsync(product, null);
+
+            var priceModel = await PrepareProductOverviewPriceModelAsync(product);
+            model.Price = priceModel.Price;
 
             models.Add(model);
         }
