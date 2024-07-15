@@ -100,4 +100,12 @@ public partial interface IProductModelFactory
     /// The task result contains the product specification model
     /// </returns>
     Task<ProductSpecificationModel> PrepareProductSpecificationModelAsync(Product product);
+
+
+    /// <summary>
+    /// Get model for all active products
+    /// </summary>
+    /// <param name="products">List of products</param>
+    /// <returns></returns>
+    Task<IEnumerable<ActiveProductsModel>> PrepareActiveProductsModelsAsync(IEnumerable<Product> products);
 }

@@ -1149,4 +1149,20 @@ public partial class ProductController : BaseNopWebApiFrontendController
 
         return Ok(modelDto);
     }
+
+
+    [HttpGet]
+    [ProducesResponseType(typeof(IList<ActiveProductsModelDto>), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> GetAllActiveProducts()
+    {
+        var activeProducts = await _productService.GetAllActiveProducts();
+        var model = (await _productModelFactory.PrepareActiveProductsModelsAsync(activeProducts)).ToList();
+
+        var modelDto = model.Select(p => p.ToDto<ActiveProductsModelDto>()).ToList();
+
+        return Ok(modelDto);
+
+
+
+    }
 }

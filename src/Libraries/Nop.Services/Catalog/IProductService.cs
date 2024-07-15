@@ -272,6 +272,14 @@ public partial interface IProductService
     /// </returns>
     Task<IList<Product>> GetProductsBySkuAsync(string[] skuArray, int vendorId = 0);
 
+
+    /// <summary>
+    /// Get all active products
+    /// </summary>
+    /// <returns></returns>
+    Task<IList<Product>> GetAllActiveProducts();
+
+
     /// <summary>
     /// Update HasTierPrices property (used for performance optimization)
     /// </summary>
