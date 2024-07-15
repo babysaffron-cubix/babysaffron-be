@@ -1816,6 +1816,14 @@ public partial class ProductService : IProductService
         return queryFilter.Except(filter).ToArray();
     }
 
+    public async Task<IList<Product>> GetAllActiveProducts()
+    {
+        var query = _productRepository.Table;
+        query = query.Where(p => !p.Deleted && p.Published);
+
+        return await query.ToListAsync();
+    }
+
     #endregion
 
     #region Inventory management methods

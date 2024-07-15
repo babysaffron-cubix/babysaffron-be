@@ -304,6 +304,9 @@ public partial class WebApiFrontendMapperConfiguration : BaseMapperConfiguration
         CreateDtoMap<ProductOverviewModel, ProductOverviewModelDto>();
         CreateDtoMap<ProductOverviewModel.ProductPriceModel, ProductOverviewModelDto.ProductOverviewProductPriceModelDto>();
 
+        CreateDtoMap<ActiveProductsModel, ActiveProductsModelDto>();
+
+
         CreateDtoMap<ProductReviewsModel, ProductReviewsModelDto>();
         CreateDtoMap<ProductReviewModel, ProductReviewModelDto>();
         CreateDtoMap<ProductReviewHelpfulnessModel, ProductReviewHelpfulnessModelDto>();

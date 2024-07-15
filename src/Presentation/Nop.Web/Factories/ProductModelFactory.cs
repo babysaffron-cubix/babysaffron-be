@@ -2003,5 +2003,44 @@ public partial class ProductModelFactory : IProductModelFactory
         return model;
     }
 
+
+    /// <summary>
+    /// Prepare the product overview models
+    /// </summary>
+    /// <param name="products">Collection of products</param>
+    /// <param name="preparePriceModel">Whether to prepare the price model</param>
+    /// <param name="preparePictureModel">Whether to prepare the picture model</param>
+    /// <param name="productThumbPictureSize">Product thumb picture size (longest side); pass null to use the default value of media settings</param>
+    /// <param name="prepareSpecificationAttributes">Whether to prepare the specification attribute models</param>
+    /// <param name="forceRedirectionAfterAddingToCart">Whether to force redirection after adding to cart</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the collection of product overview model
+    /// </returns>
+    public virtual async Task<IEnumerable<ActiveProductsModel>> PrepareActiveProductsModelsAsync(IEnumerable<Product> products)
+    {
+        ArgumentNullException.ThrowIfNull(products);
+
+        var models = new List<ActiveProductsModel>();
+        foreach (var product in products)
+        {
+            var model = new ActiveProductsModel
+            {
+                Id = product.Id,
+                Name = await _localizationService.GetLocalizedAsync(product, x => x.Name),
+                ShortDescription = await _localizationService.GetLocalizedAsync(product, x => x.ShortDescription),
+                FullDescription = await _localizationService.GetLocalizedAsync(product, x => x.FullDescription),
+                Sku = product.Sku,
+                Price = await _priceFormatter.FormatPriceAsync(product.Price)
+            };
+
+            model.PictureModels = await PrepareProductOverviewPicturesModelAsync(product, null);
+
+            models.Add(model);
+        }
+
+        return models;
+    }
+
     #endregion
 }
