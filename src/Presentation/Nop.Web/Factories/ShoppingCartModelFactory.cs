@@ -1035,12 +1035,14 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
 
                 //subtotal
                 var subTotalIncludingTax = await _workContext.GetTaxDisplayTypeAsync() == TaxDisplayType.IncludingTax && !_taxSettings.ForceTaxExclusionFromOrderSubtotal;
-                var (_, _, subTotalWithoutDiscountBase, _, _) = await _orderTotalCalculationService.GetShoppingCartSubTotalAsync(cart, subTotalIncludingTax);
+                var (discountAmountExclTax, _, subTotalWithoutDiscountBase, subTotalWithDiscountExclTax, taxRates) = await _orderTotalCalculationService.GetShoppingCartSubTotalAsync(cart, subTotalIncludingTax);
                 var subtotalBase = subTotalWithoutDiscountBase;
                 var currentCurrency = await _workContext.GetWorkingCurrencyAsync();
                 var subtotal = await _currencyService.ConvertFromPrimaryStoreCurrencyAsync(subtotalBase, currentCurrency);
                 model.SubTotal = await _priceFormatter.FormatPriceAsync(subtotal, false, currentCurrency, (await _workContext.GetWorkingLanguageAsync()).Id, subTotalIncludingTax);
                 model.SubTotalValue = subtotal;
+                model.DiscountAmount = discountAmountExclTax; 
+                model.SubTotalValueWithDiscount = subTotalWithDiscountExclTax;
 
                 var requiresShipping = await _shoppingCartService.ShoppingCartRequiresShippingAsync(cart);
                 //a customer should visit the shopping cart page (hide checkout button) before going to checkout if:

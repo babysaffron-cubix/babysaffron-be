@@ -22,6 +22,8 @@ public partial class MiniShoppingCartModelDto : ModelDto
     public bool AnonymousCheckoutAllowed { get; set; }
 
     public bool ShowProductImages { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal SubTotalValueWithDiscount { get; set; }
 
     #region
 

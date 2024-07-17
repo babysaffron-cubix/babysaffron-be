@@ -460,9 +460,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         OtpRelatedResponse otpGenerateResponse = new OtpRelatedResponse();
         var response = await _customerService.GenerateOtp(email);
 
-        if (email == null)
-            otpGenerateResponse.ResultMessage = "Please pass email";
-
+        
         if (response.Success == true)
         {
             otpGenerateResponse.ResultMessage = response.Message != null ? response.Message : "Otp is sent to your email";
