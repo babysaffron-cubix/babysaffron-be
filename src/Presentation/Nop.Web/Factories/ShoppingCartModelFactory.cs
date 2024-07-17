@@ -1067,7 +1067,6 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
                 //products. sort descending (recently added products)
                 foreach (var sci in cart
                              .OrderByDescending(x => x.Id)
-                             .Take(_shoppingCartSettings.MiniShoppingCartProductNumber)
                              .ToList())
                 {
                     var product = await _productService.GetProductByIdAsync(sci.ProductId);
