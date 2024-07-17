@@ -464,12 +464,16 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             otpGenerateResponse.ResultMessage = "Please pass email";
 
         if (response.Success == true)
+        {
             otpGenerateResponse.ResultMessage = response.Message != null ? response.Message : "Otp is sent to your email";
-
+            return Ok(otpGenerateResponse);
+        }
         else
+        {
             otpGenerateResponse.ResultMessage = response.Errors[0];
+            return StatusCode(StatusCodes.Status500InternalServerError, otpGenerateResponse);
+        }
 
-        return Ok(otpGenerateResponse);
     }
 
 

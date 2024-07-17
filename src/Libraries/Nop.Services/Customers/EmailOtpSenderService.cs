@@ -43,7 +43,7 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
     #endregion
 
-    public async Task<string> RequestOtp(string email)
+    public async Task<OtpGeneratorResult> RequestOtp(string email)
     {
 
         var response = await SendEmailUsingTemplate(email);
@@ -63,11 +63,12 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         var response = await client.SendEmailAsync(msg);
     }
 
-    private  async Task<string> SendEmailUsingTemplate(string email)
+    private  async Task<OtpGeneratorResult> SendEmailUsingTemplate(string email)
     {
+        OtpGeneratorResult otpGeneratorResult = new OtpGeneratorResult();
+
         try
         {
-
         string accountSid = _sendGridAccountSid;
         string authToken = _sendGridAuthtoken;
 
@@ -77,12 +78,14 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
             channel: "email",
             to: email,
             pathServiceSid: _sendGridPathServiceSid);
-            return "OTP generated successfully and sent over email.";
+            otpGeneratorResult.Message = "OTP generated successfully and sent over email.";
+            return otpGeneratorResult;
         }
        
         catch (Exception ex)
         {
-            return !String.IsNullOrEmpty(ex.InnerException.ToString()) ? ex.InnerException.ToString() : ex.Message;
+            otpGeneratorResult.AddError(ex.Message);
+            return otpGeneratorResult;
         }
     }
 }

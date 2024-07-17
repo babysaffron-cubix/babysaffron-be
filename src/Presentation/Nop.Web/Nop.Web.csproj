@@ -54,17 +54,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="App_Data\plugins.json" />
-    <None Remove="Plugins\ExchangeRate.EcbExchange\appsettings.json" />
-    <None Remove="Plugins\ExchangeRate.EcbExchange\plugin.json" />
-    <None Remove="Plugins\ExchangeRate.EcbExchange\logo.jpg" />
-    <None Remove="Plugins\ExternalAuth.Facebook\Content\Images\facebook_logo.png" />
-    <None Remove="Plugins\ExternalAuth.Facebook\logo.jpg" />
-    <None Remove="Plugins\ExternalAuth.Facebook\Views\Configure.cshtml" />
-    <None Remove="Plugins\ExternalAuth.Facebook\Views\PublicInfo.cshtml" />
-    <None Remove="Plugins\ExternalAuth.Facebook\Views\_ViewImports.cshtml" />
-    <None Remove="Plugins\ExternalAuth.Facebook\appsettings.json" />
-    <None Remove="Plugins\ExternalAuth.Facebook\Content\facebookstyles.css" />
-    <None Remove="Plugins\ExternalAuth.Facebook\plugin.json" />
   </ItemGroup>
 
   <ItemGroup>

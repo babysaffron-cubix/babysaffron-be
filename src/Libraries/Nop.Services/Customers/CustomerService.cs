@@ -1724,9 +1724,10 @@ public partial class CustomerService : ICustomerService
         }
 
         var response = await _otpSenderService.RequestOtp(email);
-        result.Message = response;
+        result.Message = response.Message;
+        response.Errors = response.Errors;
 
-        return result;
+        return response;
 
     }
 
