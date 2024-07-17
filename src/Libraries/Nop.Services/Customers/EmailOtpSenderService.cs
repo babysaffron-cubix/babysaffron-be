@@ -50,18 +50,7 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         return response;
     }
 
-    private async Task SendOtpToEmail(string email, string otp)
-    {
-        var apiKey = "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";
-        var client = new SendGridClient(apiKey);
-        var from = new EmailAddress("vipulm124@gmail.com", "Example User");
-        var subject = "Sending with SendGrid is Fun";
-        var to = new EmailAddress(email, email);
-        var plainTextContent = $"The otp for BabySaffron is {otp}";
-        var htmlContent = $"The otp for BabySaffron is <strong>{otp}</strong>";
-        var msg = MailHelper.CreateSingleEmail(from, to, subject, plainTextContent, htmlContent);
-        var response = await client.SendEmailAsync(msg);
-    }
+
 
     private  async Task<OtpGeneratorResult> SendEmailUsingTemplate(string email)
     {
@@ -78,8 +67,10 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
             channel: "email",
             to: email,
             pathServiceSid: _sendGridPathServiceSid);
+
             otpGeneratorResult.Message = "OTP generated successfully and sent over email.";
             return otpGeneratorResult;
+
         }
        
         catch (Exception ex)
