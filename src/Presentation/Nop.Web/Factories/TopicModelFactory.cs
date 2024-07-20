@@ -1,4 +1,5 @@
-﻿using Nop.Core;
+﻿using System.Collections.Generic;
+using Nop.Core;
 using Nop.Core.Domain.Topics;
 using Nop.Services.Localization;
 using Nop.Services.Seo;
@@ -103,6 +104,34 @@ public partial class TopicModelFactory : ITopicModelFactory
 
         return template.ViewPath;
     }
+
+
+    /// <summary>
+    /// Get the topic model list by topic system name
+    /// </summary>
+    /// <param name="systemName">Topic system name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the topic model
+    /// </returns>
+    public virtual async Task<List<TopicModel>> PrepareTopicModelListBySystemNameAsync(string systemName)
+    {
+        //load by store
+        var store = await _storeContext.GetCurrentStoreAsync();
+        var topics = await _topicService.GetTopicListBySystemNameAsync(systemName, store.Id);
+        if (topics == null || topics.Count() ==0)
+            return null;
+
+        List<TopicModel> topicModels = new List<TopicModel>();
+
+        foreach (Topic topic in topics)
+        {
+            topicModels.Add(await PrepareTopicModelAsync(topic));
+        }
+
+        return topicModels;
+    }
+
 
     #endregion
 }

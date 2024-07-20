@@ -37,4 +37,14 @@ public partial interface ITopicModelFactory
     /// The task result contains the view path
     /// </returns>
     Task<string> PrepareTemplateViewPathAsync(int topicTemplateId);
+
+    /// <summary>
+    /// Get the topic model list by topic system name
+    /// </summary>
+    /// <param name="systemName">Topic system name</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the topic model
+    /// </returns>
+    Task<List<TopicModel>> PrepareTopicModelListBySystemNameAsync(string systemName);
 }

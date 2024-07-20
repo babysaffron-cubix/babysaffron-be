@@ -924,6 +924,12 @@
             </summary>
             <param name="systemName">The topic identifier</param>
         </member>
+        <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.TopicController.GetMultipleTopicDetailsBySystemName(System.String)">
+            <summary>
+            Gets multiple topic details by system name
+            </summary>
+            <param name="systemName">The topic identifier</param>
+        </member>
         <member name="M:Nop.Plugin.Misc.WebApi.Frontend.Controllers.UrlRecordController.GetBySlug(System.String)">
             <summary>
             Gets a URL record by slug

@@ -203,5 +203,41 @@ public partial class TopicService : ITopicService
         await _topicRepository.UpdateAsync(topic);
     }
 
+
+    /// <summary>
+    /// Gets a topic
+    /// </summary>
+    /// <param name="systemName">The topic system name</param>
+    /// <param name="storeId">Store identifier; pass 0 to ignore filtering by store and load the first one</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the topic
+    /// </returns>
+    public virtual async Task<List<Topic>> GetTopicListBySystemNameAsync(string systemName, int storeId = 0)
+    {
+        if (string.IsNullOrEmpty(systemName))
+            return null;
+
+        var customer = await _workContext.GetCurrentCustomerAsync();
+        var customerRoleIds = await _customerService.GetCustomerRoleIdsAsync(customer);
+
+        var cacheKey = _staticCacheManager.PrepareKeyForDefaultCache(NopTopicDefaults.TopicBySystemNameCacheKey, systemName, storeId, customerRoleIds);
+
+        return await _staticCacheManager.GetAsync(cacheKey, async () =>
+        {
+            var query = _topicRepository.Table
+                .Where(t => t.Published);
+
+            //apply store mapping constraints
+            query = await _storeMappingService.ApplyStoreMapping(query, storeId);
+
+            //apply ACL constraints
+            query = await _aclService.ApplyAcl(query, customerRoleIds);
+
+            return query.Where(t => t.SystemName == systemName)
+                .OrderBy(t => t.Id).ToList();
+        });
+    }
+
     #endregion
 }
