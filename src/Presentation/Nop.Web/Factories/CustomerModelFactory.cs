@@ -769,8 +769,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             await _addressModelFactory.PrepareAddressModelAsync(addressModel,
                 address: address,
                 excludeProperties: false,
-                addressSettings: _addressSettings,
-                loadCountries: async () => await _countryService.GetAllCountriesAsync((await _workContext.GetWorkingLanguageAsync()).Id));
+                addressSettings: _addressSettings);
             model.Addresses.Add(addressModel);
         }
         return model;
