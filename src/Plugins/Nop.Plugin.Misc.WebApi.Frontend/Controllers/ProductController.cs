@@ -759,7 +759,7 @@ public partial class ProductController : BaseNopWebApiFrontendController
             //visible individually
             .Where(p => p.VisibleIndividually).ToListAsync();
 
-        var model = (await _productModelFactory.PrepareProductOverviewModelsAsync(products)).ToList();
+        var model = (await _productModelFactory.PrepareProductOverviewModelsAsync(products,true, true, null, true, false)).ToList();
         var modelDto = model.Select(p => p.ToDto<ProductOverviewModelDto>()).ToList();
 
         return Ok(modelDto);

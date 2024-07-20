@@ -363,7 +363,7 @@ public partial class CatalogModelFactory : ICatalogModelFactory
             model.NoResultMessage = await _localizationService.GetResourceAsync("Catalog.Products.NoResult");
         else
         {
-            model.Products = (await _productModelFactory.PrepareProductOverviewModelsAsync(products)).ToList();
+            model.Products = (await _productModelFactory.PrepareProductOverviewModelsAsync(products, true, true, null, true, false)).ToList();
             model.LoadPagedList(products);
         }
     }
