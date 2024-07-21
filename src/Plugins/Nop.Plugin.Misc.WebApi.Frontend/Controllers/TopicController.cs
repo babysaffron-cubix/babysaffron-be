@@ -4,6 +4,7 @@ using Nop.Plugin.Misc.WebApi.Frontend.Dto.Topics;
 using Nop.Services.Security;
 using Nop.Services.Stores;
 using Nop.Services.Topics;
+using Nop.Web.Areas.Admin.Models.Topics;
 using Nop.Web.Factories;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend.Controllers;
@@ -96,6 +97,29 @@ public partial class TopicController : BaseNopWebApiFrontendController
         var topicDto = topicModel.ToDto<TopicModelDto>();
 
         return Ok(topicDto);
+    }
+
+
+    /// <summary>
+    /// Gets multiple topic details by system name
+    /// </summary>
+    /// <param name="systemName">The topic identifier</param>
+    [HttpGet("{systemName}")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(List<TopicModel>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public virtual async Task<IActionResult> GetMultipleTopicDetailsBySystemName(string systemName)
+    {
+        if (string.IsNullOrEmpty(systemName))
+            return BadRequest();
+
+        var topicModel = await _topicModelFactory.PrepareTopicModelListBySystemNameAsync(systemName);
+        if (topicModel == null)
+            return NotFound($"Topic systemName={systemName} not found");
+
+        //var topicDto = topicModel.ToDto<TopicModelDto>();
+
+        return Ok(topicModel);
     }
 
     #endregion

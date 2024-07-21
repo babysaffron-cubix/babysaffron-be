@@ -77,4 +77,15 @@ public partial interface ITopicService
     /// <param name="topic">Topic</param>
     /// <returns>A task that represents the asynchronous operation</returns>
     Task UpdateTopicAsync(Topic topic);
+
+    /// <summary>
+    /// Gets list of topics
+    /// </summary>
+    /// <param name="systemName">The topic system name</param>
+    /// <param name="storeId">Store identifier; pass 0 to ignore filtering by store and load the first one</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the topic
+    /// </returns>
+    Task<List<Topic>> GetTopicListBySystemNameAsync(string systemName, int storeId = 0);
 }
