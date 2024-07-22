@@ -54,7 +54,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="App_Data\plugins.json" />
-    <None Remove="Plugins\ExchangeRate.EcbExchange\appsettings.json" />
     <None Remove="Plugins\ExchangeRate.EcbExchange\plugin.json" />
     <None Remove="Plugins\ExchangeRate.EcbExchange\logo.jpg" />
   </ItemGroup>
