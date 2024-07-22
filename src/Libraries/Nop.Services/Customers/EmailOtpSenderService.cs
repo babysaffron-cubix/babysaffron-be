@@ -34,7 +34,7 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
         var builder = new ConfigurationBuilder()
             .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
-            .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
             .AddEnvironmentVariables();
 
         _configuration = builder.Build();
@@ -66,37 +66,41 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
         try
         {
-        string accountSid = _sendGridAccountSid;
-        string authToken = _sendGridAuthtoken;
+            string accountSid = _sendGridAccountSid;
+            string authToken = _sendGridAuthtoken;
             string apiKey = _sendGridApiKey;
 
-            var client = new SendGridClient(apiKey);
-            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
-            var to = new EmailAddress(email, email);
+            #region NewCode
 
-            var msg = new SendGridMessage();
-            msg.SetFrom(from);
-            msg.AddTo(to);
-            msg.SetTemplateId(_sendGridEmailVerificationTemplateId);
+            //var client = new SendGridClient(apiKey);
+            //var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            //var to = new EmailAddress(email, email);
 
-            msg.SetTemplateData(new
-            {
-                twilio_code = randomOtp()
-            });
+            //var msg = new SendGridMessage();
+            //msg.SetFrom(from);
+            //msg.AddTo(to);
+            //msg.SetTemplateId(_sendGridEmailVerificationTemplateId);
 
-            //TwilioClient.Init(accountSid, authToken);
+            //msg.SetTemplateData(new
+            //{
+            //    twilio_code = randomOtp()
+            //});
 
-            //var verification = await VerificationResource.CreateAsync(
-            //    channel: "email",
-            //    to: email,
-            //    pathServiceSid: _sendGridPathServiceSid);
+            #endregion
 
-            //    otpGeneratorResult.Message = "OTP generated successfully and sent over email.";
-            //    return otpGeneratorResult;
+            TwilioClient.Init(accountSid, authToken);
 
-            var response = await client.SendEmailAsync(msg);
+            var verification = await VerificationResource.CreateAsync(
+                channel: "email",
+                to: email,
+                pathServiceSid: _sendGridPathServiceSid);
 
+            otpGeneratorResult.Message = "OTP generated successfully and sent over email.";
             return otpGeneratorResult;
+
+            //var response = await client.SendEmailAsync(msg);
+
+            //return otpGeneratorResult;
         }
        
         catch (Exception ex)
