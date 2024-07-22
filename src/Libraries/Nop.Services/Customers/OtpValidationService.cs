@@ -48,18 +48,18 @@ public partial class OtpValidationService : IOtpValidationService
             string accountSid = _sendGridAccountSid;
             string authToken = _sendGridAuthtoken;
 
-            TwilioClient.Init(accountSid, authToken);
+            //TwilioClient.Init(accountSid, authToken);
 
-            var verificationCheck = await VerificationCheckResource.CreateAsync(
-                to: email,
-                code: otp,
-                pathServiceSid: _sendGridPathServiceSid);
+            //var verificationCheck = await VerificationCheckResource.CreateAsync(
+            //    to: email,
+            //    code: otp,
+            //    pathServiceSid: _sendGridPathServiceSid);
 
-            if(verificationCheck.Status == "approved")
-            {
-                return otpValidationResult;
-            }
-            otpValidationResult.AddError("Otp is invalid. Please try with correct otp.");
+            //if(verificationCheck.Status == "approved")
+            //{
+            //    return otpValidationResult;
+            //}
+            //otpValidationResult.AddError("Otp is invalid. Please try with correct otp.");
             return otpValidationResult;
         }
 
