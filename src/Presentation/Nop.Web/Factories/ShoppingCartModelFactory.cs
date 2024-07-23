@@ -1,4 +1,5 @@
 ﻿using System.Globalization;
+using System.Net;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Caching;
@@ -31,6 +32,7 @@ using Nop.Services.Stores;
 using Nop.Services.Tax;
 using Nop.Services.Vendors;
 using Nop.Web.Infrastructure.Cache;
+using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Common;
 using Nop.Web.Models.Media;
 using Nop.Web.Models.ShoppingCart;
@@ -92,6 +94,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
     protected readonly ShoppingCartSettings _shoppingCartSettings;
     protected readonly TaxSettings _taxSettings;
     protected readonly VendorSettings _vendorSettings;
+    protected readonly ISpecificationAttributeService _specificationAttributeService;   
     private static readonly char[] _separator = [','];
 
     #endregion
@@ -145,7 +148,8 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         ShippingSettings shippingSettings,
         ShoppingCartSettings shoppingCartSettings,
         TaxSettings taxSettings,
-        VendorSettings vendorSettings)
+        VendorSettings vendorSettings,
+        ISpecificationAttributeService specificationAttributeService)
     {
         _addressSettings = addressSettings;
         _addressService = addressService;
@@ -195,6 +199,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         _shoppingCartSettings = shoppingCartSettings;
         _taxSettings = taxSettings;
         _vendorSettings = vendorSettings;
+        _specificationAttributeService = specificationAttributeService;
     }
 
     #endregion
@@ -1106,6 +1111,8 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
                             _mediaSettings.MiniCartThumbPictureSize, true, cartItemModel.ProductName);
                     }
 
+                    cartItemModel.ProductSpecificationModel = await PrepareProductSpecificationModelAsync(product);
+
                     model.Items.Add(cartItemModel);
                 }
             }
@@ -1114,6 +1121,97 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         return model;
     }
 
+
+    /// <summary>
+    /// Prepare the product specification model
+    /// </summary>
+    /// <param name="product">Product</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the product specification model
+    /// </returns>
+    public virtual async Task<ProductSpecificationModel> PrepareProductSpecificationModelAsync(Product product)
+    {
+        ArgumentNullException.ThrowIfNull(product);
+
+        var model = new ProductSpecificationModel();
+
+        // Add non-grouped attributes first
+        model.Groups.Add(new ProductSpecificationAttributeGroupModel
+        {
+            Attributes = await PrepareProductSpecificationAttributeModelAsync(product, null)
+        });
+
+        // Add grouped attributes
+        var groups = await _specificationAttributeService.GetProductSpecificationAttributeGroupsAsync(product.Id);
+        foreach (var group in groups)
+        {
+            model.Groups.Add(new ProductSpecificationAttributeGroupModel
+            {
+                Id = group.Id,
+                Name = await _localizationService.GetLocalizedAsync(group, x => x.Name),
+                Attributes = await PrepareProductSpecificationAttributeModelAsync(product, group)
+            });
+        }
+
+        return model;
+    }
+
+    /// <summary>
+    /// Prepare the product specification models
+    /// </summary>
+    /// <param name="product">Product</param>
+    /// <param name="group">Specification attribute group</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the list of product specification model
+    /// </returns>
+    protected virtual async Task<IList<ProductSpecificationAttributeModel>> PrepareProductSpecificationAttributeModelAsync(Product product, SpecificationAttributeGroup group)
+    {
+        ArgumentNullException.ThrowIfNull(product);
+
+        var productSpecificationAttributes = await _specificationAttributeService.GetProductSpecificationAttributesAsync(
+            product.Id, specificationAttributeGroupId: group?.Id, showOnProductPage: true);
+
+        var result = new List<ProductSpecificationAttributeModel>();
+
+        foreach (var psa in productSpecificationAttributes)
+        {
+            var option = await _specificationAttributeService.GetSpecificationAttributeOptionByIdAsync(psa.SpecificationAttributeOptionId);
+
+            var model = result.FirstOrDefault(model => model.Id == option.SpecificationAttributeId);
+            if (model == null)
+            {
+                var attribute = await _specificationAttributeService.GetSpecificationAttributeByIdAsync(option.SpecificationAttributeId);
+                model = new ProductSpecificationAttributeModel
+                {
+                    Id = attribute.Id,
+                    Name = await _localizationService.GetLocalizedAsync(attribute, x => x.Name)
+                };
+                result.Add(model);
+            }
+
+            var value = new ProductSpecificationAttributeValueModel
+            {
+                AttributeTypeId = psa.AttributeTypeId,
+                ColorSquaresRgb = option.ColorSquaresRgb,
+                ValueRaw = psa.AttributeType switch
+                {
+                    SpecificationAttributeType.Option => WebUtility.HtmlEncode(await _localizationService.GetLocalizedAsync(option, x => x.Name)),
+                    SpecificationAttributeType.CustomText => WebUtility.HtmlEncode(await _localizationService.GetLocalizedAsync(psa, x => x.CustomValue)),
+                    SpecificationAttributeType.CustomHtmlText => await _localizationService.GetLocalizedAsync(psa, x => x.CustomValue),
+                    SpecificationAttributeType.Hyperlink => $"<a href='{psa.CustomValue}' target='_blank'>{psa.CustomValue}</a>",
+                    _ => null
+                }
+            };
+
+            model.Values.Add(value);
+        }
+
+        return result;
+    }
+
+        
     /// <summary>
     /// Prepare selected checkout attributes
     /// </summary>

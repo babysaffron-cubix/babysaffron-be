@@ -1,4 +1,5 @@
 ﻿using Nop.Plugin.Misc.WebApi.Framework.Dto;
+using Nop.Plugin.Misc.WebApi.Frontend.Dto.Catalog;
 using Nop.Plugin.Misc.WebApi.Frontend.Dto.Product;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend.Dto.ShoppingCart;
@@ -24,6 +25,7 @@ public partial class MiniShoppingCartModelDto : ModelDto
     public bool ShowProductImages { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal SubTotalValueWithDiscount { get; set; }
+   
 
     #region
 
@@ -43,6 +45,7 @@ public partial class MiniShoppingCartModelDto : ModelDto
         public string AttributeInfo { get; set; }
 
         public PictureModelDto Picture { get; set; }
+        public ProductSpecificationModelDto ProductSpecificationModel { get; set; }
     }
 
     #endregion

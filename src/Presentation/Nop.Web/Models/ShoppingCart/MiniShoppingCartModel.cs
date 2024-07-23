@@ -1,4 +1,5 @@
 ﻿using Nop.Web.Framework.Models;
+using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Media;
 
 namespace Nop.Web.Models.ShoppingCart;
@@ -29,6 +30,7 @@ public partial record MiniShoppingCartModel : BaseNopModel
         public ShoppingCartItemModel()
         {
             Picture = new PictureModel();
+            ProductSpecificationModel = new ProductSpecificationModel();
         }
 
         public int ProductId { get; set; }
@@ -45,6 +47,9 @@ public partial record MiniShoppingCartModel : BaseNopModel
         public string AttributeInfo { get; set; }
 
         public PictureModel Picture { get; set; }
+
+        //specification attributes
+        public ProductSpecificationModel ProductSpecificationModel { get; set; }
     }
 
     #endregion
