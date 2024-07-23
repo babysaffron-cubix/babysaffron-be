@@ -346,4 +346,12 @@ public partial interface IOrderProcessingService
     /// <param name="orderId">The order id</param>
     /// <returns></returns>
     Task<PlaceOrderResult> MarkPaymentStatusAsPaid(RazorpayPaymentSaveRequest razorpayPaymentSaveRequest);
+
+
+    /// if the input Razorpay payid is not null, then mark order as complete and payment status as complete
+    /// if the input Razorpay payid is NULL, then mark order status as cancelled
+    /// </summary>
+    /// <param name="orderId">The order id</param>
+    /// <returns></returns>
+    Task<PlaceOrderResult> UpdateOrderStatus(RazorpayPaymentSaveRequest razorpayPaymentSaveRequest);
 }

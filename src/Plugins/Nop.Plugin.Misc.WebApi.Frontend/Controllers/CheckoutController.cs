@@ -1270,6 +1270,22 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         }
     }
 
+
+    [HttpPost]
+    [ProducesResponseType(typeof(PlaceOrderResult), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> UpdateOrderStatus([FromBody] RazorpayPaymentSaveRequest razorpayPaymentSaveRequest)
+    {
+        try
+        {
+            var response = await _orderProcessingService.UpdateOrderStatus(razorpayPaymentSaveRequest);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
     /// <summary>
     /// Prepare checkout completed model
     /// </summary>

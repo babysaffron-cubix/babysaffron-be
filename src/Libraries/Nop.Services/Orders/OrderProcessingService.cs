@@ -1530,6 +1530,50 @@ public partial class OrderProcessingService : IOrderProcessingService
             await _orderService.UpdateOrderAsync(order);
     }
 
+
+    /// <summary>
+    /// if the input Razorpay payid is not null, then mark order as complete and payment status as complete
+    /// if the input Razorpay payid is NULL, then mark order status as cancelled
+    /// </summary>
+    /// <param name="orderId">Input order id</param>
+    /// <returns></returns>
+    public virtual async Task<PlaceOrderResult> UpdateOrderStatus(RazorpayPaymentSaveRequest razorpayPaymentSaveRequest)
+    {
+        var placeOrderResult = new PlaceOrderResult();
+
+        var order = await _orderService.GetOrderByIdAsync(razorpayPaymentSaveRequest.BabySaffronOrderId);
+        try
+        {
+
+
+            if (order != null && String.IsNullOrEmpty(razorpayPaymentSaveRequest.RazorpayPaymentId))
+            {
+                // update order Payment Status to paid and order status to complete
+                order.PaymentStatusId = (int)PaymentStatus.Paid;
+                order.PaymentMethodSystemName = "RazorPay";
+                order.OrderStatusId = (int)OrderStatus.Complete;
+                order.CardName = razorpayPaymentSaveRequest.RazorpayPaymentId;
+                await _orderService.UpdateOrderAsync(order);
+                placeOrderResult.PlacedOrder = order;
+
+            }
+            else
+            {
+                // mark order status as Cancelled
+                order.OrderStatusId = (int)OrderStatus.Cancelled;
+                await _orderService.UpdateOrderAsync(order);
+                placeOrderResult.PlacedOrder = order;
+            }
+
+        }
+        catch (Exception ex)
+        {
+            placeOrderResult.AddError(ex.Message);
+        }
+
+        return placeOrderResult;
+    }
+
     #endregion
 
     #region Methods
