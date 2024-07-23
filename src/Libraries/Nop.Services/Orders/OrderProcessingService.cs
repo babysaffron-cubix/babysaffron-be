@@ -1546,7 +1546,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         {
 
 
-            if (order != null && String.IsNullOrEmpty(razorpayPaymentSaveRequest.RazorpayPaymentId))
+            if (order != null && !String.IsNullOrEmpty(razorpayPaymentSaveRequest.RazorpayPaymentId))
             {
                 // update order Payment Status to paid and order status to complete
                 order.PaymentStatusId = (int)PaymentStatus.Paid;
