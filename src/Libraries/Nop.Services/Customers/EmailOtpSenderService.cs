@@ -22,6 +22,7 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
     protected readonly string _sendGridEmailVerificationTemplateId;
     protected readonly string _sendGridSenderEmailId;
     protected readonly string _sendGridSenderName;
+    protected readonly string _sendGridWelcomeEmailTemplateId;
     #endregion
 
     #region Ctor
@@ -46,6 +47,8 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         _sendGridEmailVerificationTemplateId = _configuration["AppSettings:SendGridEmailVerificationTemplateId"];
         _sendGridSenderEmailId = _configuration["AppSettings:SendGridSenderEmailId"];
         _sendGridSenderName = _configuration["AppSettings:SendGridSenderName"];
+        _sendGridWelcomeEmailTemplateId = _configuration["AppSettings:SendGridWelcomeEmailTemplateId"];
+
     }
 
 
@@ -70,24 +73,6 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
             string authToken = _sendGridAuthtoken;
             string apiKey = _sendGridApiKey;
 
-            #region NewCode
-
-            //var client = new SendGridClient(apiKey);
-            //var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
-            //var to = new EmailAddress(email, email);
-
-            //var msg = new SendGridMessage();
-            //msg.SetFrom(from);
-            //msg.AddTo(to);
-            //msg.SetTemplateId(_sendGridEmailVerificationTemplateId);
-
-            //msg.SetTemplateData(new
-            //{
-            //    twilio_code = randomOtp()
-            //});
-
-            #endregion
-
             TwilioClient.Init(accountSid, authToken);
 
             var verification = await VerificationResource.CreateAsync(
@@ -98,9 +83,6 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
             otpGeneratorResult.Message = "OTP generated successfully and sent over email.";
             return otpGeneratorResult;
 
-            //var response = await client.SendEmailAsync(msg);
-
-            //return otpGeneratorResult;
         }
        
         catch (Exception ex)
@@ -116,6 +98,30 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         int randNum = r.Next(1000000);
         string sixDigitNumber = randNum.ToString("D6");
         return sixDigitNumber;
+    }
+
+    public async Task SendWelcomeEmail(string email)
+    {
+        try
+        {
+
+            var client = new SendGridClient(_sendGridApiKey);
+            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var to = new EmailAddress(email, email);
+
+            var msg = new SendGridMessage();
+            msg.SetFrom(from);
+            msg.AddTo(to);
+            msg.SetTemplateId(_sendGridWelcomeEmailTemplateId);
+
+            var response = await client.SendEmailAsync(msg);
+
+        }
+
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 }
 

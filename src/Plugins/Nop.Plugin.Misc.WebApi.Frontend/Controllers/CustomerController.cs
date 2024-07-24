@@ -94,6 +94,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     private readonly LocalizationSettings _localizationSettings;
     private readonly MediaSettings _mediaSettings;
     private readonly TaxSettings _taxSettings;
+    private readonly IOtpSenderService _otpSenderService;
 
     private static readonly char[] _separator = [','];
 
@@ -149,7 +150,8 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         MediaSettings mediaSettings,
         TaxSettings taxSettings,
         IAuthorizationUserService authorizationUserService,
-        HttpClient httpClient)
+        HttpClient httpClient,
+        IOtpSenderService otpSenderService)
     {
         _addressSettings = addressSettings;
         _captchaSettings = captchaSettings;
@@ -196,6 +198,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         _taxSettings = taxSettings;
         _authorizationUserService = authorizationUserService;
         _httpClient = httpClient;
+        _otpSenderService = otpSenderService;
     }
 
     #endregion
@@ -516,7 +519,9 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         else
         {
             //customer does not exist, register and then login
-            return await RegisterByEmail(email);
+            var response = await RegisterByEmail(email);
+            await _otpSenderService.SendWelcomeEmail(email);
+            return response;
 
         }
     }
