@@ -1,6 +1,7 @@
 ﻿using Nop.Web.Framework.Models;
 using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Media;
+using static Nop.Web.Models.ShoppingCart.ShoppingCartModel;
 
 namespace Nop.Web.Models.ShoppingCart;
 
@@ -22,6 +23,7 @@ public partial record MiniShoppingCartModel : BaseNopModel
     public bool ShowProductImages { get; set; }
     public decimal DiscountAmount { get; set; }
     public decimal SubTotalValueWithDiscount { get; set; }
+    public DiscountBoxModel DiscountBox { get; set; }
 
     #region Nested Classes
 
