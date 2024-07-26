@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Net;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Nop.Core;
 using Nop.Core.Caching;
@@ -1019,6 +1020,8 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
     public virtual async Task<MiniShoppingCartModel> PrepareMiniShoppingCartModelAsync()
     {
         var customer = await _workContext.GetCurrentCustomerAsync();
+
+
         var model = new MiniShoppingCartModel
         {
             ShowProductImages = _shoppingCartSettings.ShowProductImagesInMiniShoppingCart,
@@ -1026,7 +1029,38 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
             DisplayShoppingCartButton = true,
             CurrentCustomerIsGuest = await _customerService.IsGuestAsync(customer),
             AnonymousCheckoutAllowed = _orderSettings.AnonymousCheckoutAllowed,
+            DiscountBox = new ShoppingCartModel.DiscountBoxModel()
         };
+
+        // has applied discount coupon code
+        var customerDiscounts = await _genericAttributeService.GetAttributeForEntityAsync(customer.Id, NopCustomerDefaults.DiscountCouponCodeAttribute);
+        if (customerDiscounts != null)
+        {
+            var xmlString = CommonHelper.To<string>(customerDiscounts.Value);
+            XDocument xdoc = XDocument.Parse(xmlString);
+
+            // Query the XML to get the CouponCode element
+            var couponCodeElement = xdoc.Descendants("CouponCode").FirstOrDefault();
+            string discountCouponCode = couponCodeElement != null ? couponCodeElement.Attribute("Code")?.Value : null;
+
+            var discount = await (await _discountService.GetAllDiscountsAsync(couponCode: discountCouponCode))
+                .FirstOrDefaultAwaitAsync(async d => d.RequiresCouponCode);
+
+            if (discount != null)
+            {
+                model.DiscountBox.Messages = new List<string>() { await _localizationService.GetResourceAsync("ShoppingCart.DiscountCouponCode.Applied") };
+                //model.DiscountBox.Messages.Add(
+                //    await _localizationService.GetResourceAsync("ShoppingCart.DiscountCouponCode.Applied"));
+                model.DiscountBox.IsApplied = true;
+                model.DiscountBox.AppliedDiscountsWithCodes = new List<ShoppingCartModel.DiscountBoxModel.DiscountInfoModel>();
+                model.DiscountBox.AppliedDiscountsWithCodes.Add(new ShoppingCartModel.DiscountBoxModel.DiscountInfoModel
+                {
+                    Id = discount.Id,
+                    CouponCode = discount.CouponCode
+                });
+            }
+
+        }
 
         //performance optimization (use "HasShoppingCartItems" property)
         if (customer.HasShoppingCartItems)
