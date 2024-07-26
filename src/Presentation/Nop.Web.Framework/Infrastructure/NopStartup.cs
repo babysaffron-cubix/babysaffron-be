@@ -8,6 +8,7 @@ using Nop.Core.Configuration;
 using Nop.Core.Events;
 using Nop.Core.Infrastructure;
 using Nop.Data;
+using Nop.Services;
 using Nop.Services.Affiliates;
 using Nop.Services.Attributes;
 using Nop.Services.Authentication;
@@ -265,8 +266,12 @@ public partial class NopStartup : INopStartup
         services.AddSingleton<IOtpGeneratorService, OtpGeneratorService>();
         services.AddSingleton<IOtpValidationService, OtpValidationService>();
         services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
-
         
+
+        services.AddHttpClient();
+
+
+
 
 
 

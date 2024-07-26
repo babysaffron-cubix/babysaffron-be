@@ -33,6 +33,7 @@
   <ItemGroup>
     <None Remove="logo.png" />
     <None Remove="plugin.json" />
+    <None Remove="Services\Salesforce\" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,6 +57,9 @@
   </ItemGroup>
 
   <!-- This target execute after "Build" target -->
+  <ItemGroup>
+    <Folder Include="Services\Salesforce\" />
+  </ItemGroup>
   <Target Name="NopTarget" AfterTargets="Build">
     <!-- Delete unnecessary libraries from plugins path -->
     <MSBuild Projects="@(ClearPluginAssemblies)" Properties="PluginPath=$(MSBuildProjectDirectory)\$(OutDir)" Targets="NopClear" />

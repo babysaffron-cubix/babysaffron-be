@@ -1062,5 +1062,36 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         return result;
     }
 
+
+    /// <summary>
+    /// For the current customerid, get available address
+    /// </summary>
+    /// <param name="customerId"></param>
+    /// <returns></returns>
+    public async Task<CustomerAddressListModel> PrepareCustomerAddressModelByCustomerIdAsync(int customerId)
+    {
+        var customer = await _customerService.GetCustomerByIdAsync(customerId);
+        int addressId = customer.BillingAddressId != null ? Convert.ToInt32(customer.BillingAddressId) : (customer.ShippingAddressId != null ? Convert.ToInt32(customer.ShippingAddressId) : 0);
+        var model = new CustomerAddressListModel();
+
+        if (addressId != 0)
+        {
+            var address = await (await _customerService.GetAddressesByCustomerIdAsync(customer.Id))
+            //enabled for the current store
+            .WhereAwait(async a => (a.CountryId == null || await _storeMappingService.AuthorizeAsync(await _countryService.GetCountryByAddressAsync(a))) && a.Id == addressId)
+            .FirstOrDefaultAsync();
+
+            var addressModel = new AddressModel();
+            await _addressModelFactory.PrepareAddressModelAsync(addressModel,
+                address: address,
+                excludeProperties: false,
+                addressSettings: _addressSettings);
+            model.Addresses.Add(addressModel);
+        
+        }
+
+        return model;
+    }
+
     #endregion
 }

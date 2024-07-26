@@ -15,6 +15,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using Nop.Services.Customers;
+using Nop.Services;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend.Controllers;
 
@@ -27,6 +28,7 @@ public partial class AuthenticateController : BaseNopWebApiController
     private readonly IAuthorizationUserService _authorizationUserService;
     private readonly WebApiCommonSettings _webApiCommonSettings;
     private readonly ICustomerService _customerService;
+    private readonly ISalesforceService _salesforceService;
 
     #endregion
 
@@ -35,11 +37,13 @@ public partial class AuthenticateController : BaseNopWebApiController
     public AuthenticateController(
         IAuthorizationUserService authorizationUserService,
         WebApiCommonSettings webApiCommonSettings,
-        ICustomerService customerService)
+        ICustomerService customerService,
+        ISalesforceService salesforceService)
     {
         _authorizationUserService = authorizationUserService;
         _webApiCommonSettings = webApiCommonSettings;
         _customerService = customerService;
+        _salesforceService = salesforceService;
     }
 
     #endregion
@@ -96,6 +100,15 @@ public partial class AuthenticateController : BaseNopWebApiController
     public IActionResult GetApiVersion()
     {
         return Ok(WebApiCommonDefaults.API_VERSION);
+    }
+
+    [Authorize(true)]
+    [HttpGet]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSalesforceToken()
+    {
+        var response = await _salesforceService.UpsertSalesforceCustomer(980);
+        return Ok();
     }
 
 
@@ -172,6 +185,9 @@ public partial class AuthenticateController : BaseNopWebApiController
 
     return principal;
 }
+
+
+
 
     #endregion
 }
