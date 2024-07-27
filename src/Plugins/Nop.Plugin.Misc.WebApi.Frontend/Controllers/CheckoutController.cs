@@ -64,6 +64,7 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
     protected readonly RewardPointsSettings _rewardPointsSettings;
     protected readonly ShippingSettings _shippingSettings;
     protected readonly TaxSettings _taxSettings;
+    protected readonly ISalesforceService _salesforceService;
 
     private static readonly string[] _separator = ["___"];
 
@@ -96,7 +97,8 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         PaymentSettings paymentSettings,
         RewardPointsSettings rewardPointsSettings,
         ShippingSettings shippingSettings,
-        TaxSettings taxSettings
+        TaxSettings taxSettings,
+        ISalesforceService salesforceService
     )
     {
         _addressSettings = addressSettings;
@@ -125,6 +127,7 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         _rewardPointsSettings = rewardPointsSettings;
         _shippingSettings = shippingSettings;
         _taxSettings = taxSettings;
+        _salesforceService = salesforceService;
     }
 
     #endregion
@@ -1238,6 +1241,7 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
 
                 //await _paymentService.PostProcessPaymentAsync(postProcessPaymentRequest);
 
+
                 return Ok(new ConfirmOrderResponse { RedirectToMethod = "Completed", Id = placeOrderResult.PlacedOrder.Id });
             }
 
@@ -1278,6 +1282,8 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         try
         {
             var response = await _orderProcessingService.UpdateOrderStatus(razorpayPaymentSaveRequest);
+            await _salesforceService.CreateSalesforceOrder(razorpayPaymentSaveRequest.BabySaffronOrderId);
+
             return Ok(response);
         }
         catch (Exception ex)

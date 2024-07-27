@@ -177,4 +177,20 @@ public partial interface ICustomerModelFactory
     /// The task result contains the list of the customer attribute model
     /// </returns>
     Task<IList<CustomerAttributeModel>> PrepareCustomCustomerAttributesAsync(Customer customer, string overrideAttributesXml = "");
+
+
+    /// <summary>
+    /// For the current customer, get either the billing or shipping address, depending on availability, if none received then return null
+    /// </summary>
+    /// <param name="customerId">The customerId for which we need to fetch the data</param>
+    /// <returns></returns>
+    Task<CustomerAddressListModel> PrepareCustomerAddressModelByCustomerIdAsync(int customerId);
+
+
+    /// <summary>
+    /// for the input addressIds, get address information
+    /// </summary>
+    /// <param name="addressIds"></param>
+    /// <returns></returns>
+    Task<CustomerAddressListModel> PrepareAddressModelByAddressIdsAsync(List<int> addressIds);
 }

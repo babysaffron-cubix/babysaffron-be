@@ -30,4 +30,10 @@
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Remove="Domain\Salesforce\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Domain\Salesforce\" />
+  </ItemGroup>
 </Project>

@@ -94,6 +94,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     private readonly LocalizationSettings _localizationSettings;
     private readonly MediaSettings _mediaSettings;
     private readonly TaxSettings _taxSettings;
+    private readonly ISalesforceService _salesforceService;
     private readonly IOtpSenderService _otpSenderService;
 
     private static readonly char[] _separator = [','];
@@ -151,6 +152,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         TaxSettings taxSettings,
         IAuthorizationUserService authorizationUserService,
         HttpClient httpClient,
+        ISalesforceService salesforceService)
         IOtpSenderService otpSenderService)
     {
         _addressSettings = addressSettings;
@@ -198,6 +200,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         _taxSettings = taxSettings;
         _authorizationUserService = authorizationUserService;
         _httpClient = httpClient;
+        _salesforceService = salesforceService;
         _otpSenderService = otpSenderService;
     }
 
@@ -492,6 +495,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             otpValidationResult.ResultMessage = "Otp is validated";
             otpValidationResult.status_code = StatusCodes.Status200OK;
             var loginOrRegisterResponse = await LoginOrRegister(email);
+            await _salesforceService.UpsertSalesforceCustomerAsync(loginOrRegisterResponse.CustomerId);
             return Ok(loginOrRegisterResponse);
         }
 
@@ -606,6 +610,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             if(emailFromValidation == request.Email)
             {
                 var loginOrRegisterResponse = await LoginOrRegister(emailFromValidation);
+                await _salesforceService.UpsertSalesforceCustomerAsync(loginOrRegisterResponse.CustomerId);
                 return Ok(loginOrRegisterResponse);
             }
         }
@@ -1534,6 +1539,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         customer.Phone = request.Phone;
 
         await _customerService.UpdateCustomerAsync(customer);
+            await _salesforceService.UpsertSalesforceCustomerAsync(customer.Id);
 
         return Ok(new { response = "Customer Info updated succesfully." });
         }

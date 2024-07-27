@@ -82,6 +82,9 @@ public partial class PluginNopStartup : INopStartup
 
         services.AddScoped<IAuthorizationUserService, AuthorizationUserService>();
         services.AddScoped<ICheckoutService, CheckoutService>();
+        services.AddScoped<ISalesforceService, SalesforceService>();
+        services.AddHttpClient();
+     
     }
 
     /// <summary>
@@ -116,6 +119,7 @@ public partial class PluginNopStartup : INopStartup
 
         // custom jwt auth middleware
         application.UseMiddleware<JwtMiddleware>();
+
     }
 
     /// <summary>

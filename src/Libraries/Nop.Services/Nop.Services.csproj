@@ -43,8 +43,14 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Common\Salesforce\" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Common\Salesforce\" />
   </ItemGroup>
 </Project>
