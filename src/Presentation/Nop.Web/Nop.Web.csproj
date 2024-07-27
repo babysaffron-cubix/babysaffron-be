@@ -54,6 +54,8 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="App_Data\plugins.json" />
+    <None Remove="Plugins\Misc.WebApi.Framework\Nop.Web.dll" />
+    <None Remove="Plugins\Misc.WebApi.Framework\Nop.Web.Framework.dll" />
   </ItemGroup>
 
   <ItemGroup>
