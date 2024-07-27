@@ -152,7 +152,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         TaxSettings taxSettings,
         IAuthorizationUserService authorizationUserService,
         HttpClient httpClient,
-        ISalesforceService salesforceService)
+        ISalesforceService salesforceService,
         IOtpSenderService otpSenderService)
     {
         _addressSettings = addressSettings;
