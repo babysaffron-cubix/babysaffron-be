@@ -98,6 +98,31 @@ public partial class GenericAttributeService : IGenericAttributeService
             select ga;
         var attributes = await _shortTermCacheManager.GetAsync(async () => await query.ToListAsync(), NopCommonDefaults.GenericAttributeCacheKey, entityId, keyGroup);
 
+        var att = await _genericAttributeRepository.Table.Where(x => x.EntityId == entityId && x.Key == keyGroup).Select(x => x).ToListAsync();
+        var all = await _genericAttributeRepository.Table.Select(x => x).ToListAsync();
+                 
+
+        return attributes;
+    }
+
+
+    /// <summary>
+    /// Get attributes
+    /// </summary>
+    /// <param name="entityId">Entity identifier</param>
+    /// <param name="keyGroup">Key group</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// The task result contains the get attributes
+    /// </returns>
+    public virtual async Task<GenericAttribute> GetAttributeForEntityAsync(int entityId, string key)
+    {
+        var query = from ga in _genericAttributeRepository.Table
+                    where ga.EntityId == entityId &&
+                          ga.Key == key
+                    select ga;
+        var attributes = await _shortTermCacheManager.GetAsync(async () => await query.FirstOrDefaultAsync(), NopCommonDefaults.GenericAttributeCacheKey, entityId, key);
+
         return attributes;
     }
 

@@ -1128,6 +1128,13 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
                 itemModel.Warnings = warningItem.Warnings.Concat(itemModel.Warnings).Distinct().ToList();
         }
 
+        // if cart count is 0, then check if the discount was applied for this user and delete it
+        if (cart.Count() == 0)
+        {
+            //clear customer discont attribute
+            await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.DiscountCouponCodeAttribute, null);
+        }
+
         return Ok(model.ToDto<ShoppingCartModelDto>());
     }
 

@@ -87,4 +87,6 @@ public partial interface IGenericAttributeService
     /// </returns>
     Task<TPropType> GetAttributeAsync<TEntity, TPropType>(int entityId, string key, int storeId = 0, TPropType defaultValue = default)
         where TEntity : BaseEntity;
+
+    Task<GenericAttribute> GetAttributeForEntityAsync(int entityId, string key);
 }
