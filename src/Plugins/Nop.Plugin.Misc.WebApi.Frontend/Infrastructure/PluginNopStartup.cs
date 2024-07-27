@@ -83,6 +83,7 @@ public partial class PluginNopStartup : INopStartup
         services.AddScoped<IAuthorizationUserService, AuthorizationUserService>();
         services.AddScoped<ICheckoutService, CheckoutService>();
         services.AddScoped<ISalesforceService, SalesforceService>();
+        services.AddHttpClient();
      
     }
 

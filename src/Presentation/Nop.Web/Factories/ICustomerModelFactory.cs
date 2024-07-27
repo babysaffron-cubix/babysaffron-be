@@ -185,4 +185,12 @@ public partial interface ICustomerModelFactory
     /// <param name="customerId">The customerId for which we need to fetch the data</param>
     /// <returns></returns>
     Task<CustomerAddressListModel> PrepareCustomerAddressModelByCustomerIdAsync(int customerId);
+
+
+    /// <summary>
+    /// for the input addressIds, get address information
+    /// </summary>
+    /// <param name="addressIds"></param>
+    /// <returns></returns>
+    Task<CustomerAddressListModel> PrepareAddressModelByAddressIdsAsync(List<int> addressIds);
 }

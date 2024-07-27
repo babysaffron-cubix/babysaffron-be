@@ -19,6 +19,7 @@ using Nop.Services.Caching;
 using Nop.Services.Catalog;
 using Nop.Services.Cms;
 using Nop.Services.Common;
+using Nop.Services.Common.Salesforce;
 using Nop.Services.Configuration;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
@@ -266,6 +267,7 @@ public partial class NopStartup : INopStartup
         services.AddSingleton<IOtpGeneratorService, OtpGeneratorService>();
         services.AddSingleton<IOtpValidationService, OtpValidationService>();
         services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
+        services.AddScoped<ISalesforceCommonService, SalesforceCommonService>();
         
 
         services.AddHttpClient();

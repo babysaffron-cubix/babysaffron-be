@@ -54,11 +54,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="App_Data\plugins.json" />
-    <None Remove="Plugins\ExchangeRate.EcbExchange\Nop.Plugin.ExchangeRate.EcbExchange.deps.json" />
-    <None Remove="Plugins\ExchangeRate.EcbExchange\Nop.Plugin.ExchangeRate.EcbExchange.dll" />
-    <None Remove="Plugins\Shipping.UPS\Nop.Plugin.Shipping.UPS.deps.json" />
-    <None Remove="Plugins\Shipping.UPS\Nop.Plugin.Shipping.UPS.dll" />
-    <None Remove="Plugins\ExternalAuth.Facebook\Views\PublicInfo.cshtml" />
   </ItemGroup>
 
   <ItemGroup>

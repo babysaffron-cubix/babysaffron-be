@@ -102,15 +102,6 @@ public partial class AuthenticateController : BaseNopWebApiController
         return Ok(WebApiCommonDefaults.API_VERSION);
     }
 
-    [Authorize(true)]
-    [HttpGet]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetSalesforceToken()
-    {
-        var response = await _salesforceService.UpsertSalesforceCustomer(980);
-        return Ok();
-    }
-
 
     [Authorize(true)]
     [HttpPost]

@@ -76,6 +76,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     protected readonly RewardPointsSettings _rewardPointsSettings;
     protected readonly SecuritySettings _securitySettings;
     protected readonly TaxSettings _taxSettings;
+    protected readonly IAddressService _addressService;
     protected readonly VendorSettings _vendorSettings;
 
     #endregion
@@ -119,7 +120,8 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         RewardPointsSettings rewardPointsSettings,
         SecuritySettings securitySettings,
         TaxSettings taxSettings,
-        VendorSettings vendorSettings)
+        VendorSettings vendorSettings,
+        IAddressService addressService)
     {
         _addressSettings = addressSettings;
         _captchaSettings = captchaSettings;
@@ -159,6 +161,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         _securitySettings = securitySettings;
         _taxSettings = taxSettings;
         _vendorSettings = vendorSettings;
+        _addressService = addressService;
     }
 
     #endregion
@@ -1088,6 +1091,29 @@ public partial class CustomerModelFactory : ICustomerModelFactory
                 addressSettings: _addressSettings);
             model.Addresses.Add(addressModel);
         
+        }
+
+        return model;
+    }
+
+
+    /// <summary>
+    /// for the input addressIds, get address information
+    /// </summary>
+    /// <param name="addressIds"></param>
+    /// <returns></returns>
+    public async Task<CustomerAddressListModel> PrepareAddressModelByAddressIdsAsync(List<int> addressIds)
+    {
+        var model = new CustomerAddressListModel();
+        foreach (int addressId in addressIds)
+        {
+            var address = await _addressService.GetAddressByIdAsync(addressId);
+            var addressModel = new AddressModel();
+            await _addressModelFactory.PrepareAddressModelAsync(addressModel,
+                address: address,
+                excludeProperties: false,
+                addressSettings: _addressSettings);
+            model.Addresses.Add(addressModel);
         }
 
         return model;
