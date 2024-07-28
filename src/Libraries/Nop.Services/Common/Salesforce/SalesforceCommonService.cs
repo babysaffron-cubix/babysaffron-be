@@ -137,6 +137,11 @@ public class SalesforceCommonService : ISalesforceCommonService
                 responseContent = await response.Content.ReadAsStringAsync();
             }
         }
+        else
+        {
+            response.EnsureSuccessStatusCode();
+            responseContent = await response.Content.ReadAsStringAsync();
+        }
         return responseContent;
     }
 
