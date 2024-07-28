@@ -601,20 +601,28 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     [ProducesResponseType(typeof(AuthenticateResponse), StatusCodes.Status200OK)]
     public virtual async Task<IActionResult> LoginByGoogle([FromBody] GoogleLoginRequest request)
     {
-        var myresponse = await _httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={request.Token}");
-        if (myresponse.IsSuccessStatusCode)
+        try
         {
-            var content = await myresponse.Content.ReadAsStringAsync();
-            var jsonResponse = JObject.Parse(content);
-            var emailFromValidation = jsonResponse["email"].ToString();
-            if(emailFromValidation == request.Email)
+
+            var myresponse = await _httpClient.GetAsync($"https://www.googleapis.com/oauth2/v3/tokeninfo?access_token={request.Token}");
+            if (myresponse.IsSuccessStatusCode)
             {
-                var loginOrRegisterResponse = await LoginOrRegister(emailFromValidation);
-                await _salesforceService.UpsertSalesforceCustomerAsync(loginOrRegisterResponse.CustomerId);
-                return Ok(loginOrRegisterResponse);
+                var content = await myresponse.Content.ReadAsStringAsync();
+                var jsonResponse = JObject.Parse(content);
+                var emailFromValidation = jsonResponse["email"].ToString();
+                if(emailFromValidation == request.Email)
+                {
+                    var loginOrRegisterResponse = await LoginOrRegister(emailFromValidation);
+                    await _salesforceService.UpsertSalesforceCustomerAsync(loginOrRegisterResponse.CustomerId);
+                    return Ok(loginOrRegisterResponse);
+                }
             }
+                return Unauthorized("Login failed. Invalid token.");
         }
-        return Unauthorized("Login failed. Invalid token.");
+        catch (Exception ex)
+        {
+            return BadRequest();
+        }
     }
 
 

@@ -162,6 +162,10 @@ public class SalesforceService : ISalesforceService
     /// <returns></returns>
     public async Task<SalesforceContactUpsertResponse> UpsertSalesforceCustomerAsync(int customerId)
     {
+        try
+        {
+
+        
         var customer = await _customerService.GetCustomerByIdAsync(customerId);
         SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
         if (customer != null)
@@ -169,7 +173,7 @@ public class SalesforceService : ISalesforceService
             int addressId = customer.BillingAddressId != null ? Convert.ToInt32(customer.BillingAddressId) : (customer.ShippingAddressId != null ? Convert.ToInt32(customer.ShippingAddressId) : 0);
             var addresses = addressId > 0 ? await _customerModelFactory.PrepareCustomerAddressModelByCustomerIdAsync(customerId) : null;
 
-            var address = addresses.Addresses.Count() > 0 ? addresses.Addresses[0] : null;
+            var address = (addresses != null && addresses.Addresses != null &&  addresses.Addresses.Count() > 0) ? addresses.Addresses[0] : null;
 
             //get sfdc contact number, which might have been saved the last time in the db
             string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
@@ -225,12 +229,20 @@ public class SalesforceService : ISalesforceService
             }
             #endregion
 
+
+
         }
 
 
         SalesforceContactUpsertResponse salesforceContactUpsertResponse = new SalesforceContactUpsertResponse() { SalesforceResponse = new List<SalesforceOrderResponse>() };
         salesforceContactUpsertResponse.SalesforceResponse.Add(salesforceOrderResponse);
         return salesforceContactUpsertResponse;
+
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
 
