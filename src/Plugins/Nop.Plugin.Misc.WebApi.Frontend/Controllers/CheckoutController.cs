@@ -1195,13 +1195,30 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ConfirmOrderResponse), StatusCodes.Status200OK)]
-    public virtual async Task<IActionResult> ConfirmOrder()
+    public virtual async Task<IActionResult> ConfirmOrder(int billingAddressId = 0, int shippingAddressId = 0)
     {
         //validation
         var (customer, store, cart, actionResult) = await ValidateRequestAsync();
 
         if (actionResult != null)
             return actionResult;
+
+
+        if (billingAddressId != 0 && shippingAddressId != 0)
+        {
+
+
+            var billingAddress = await _customerService.GetCustomerAddressAsync(customer.Id, billingAddressId);
+            var shippingAddress = billingAddressId != shippingAddressId ? await _customerService.GetCustomerAddressAsync(customer.Id, shippingAddressId) : billingAddress;
+
+            if (billingAddress == null || shippingAddress == null)
+                return NotFound($"Address by id={billingAddressId} and {shippingAddressId} not found.");
+
+            customer.BillingAddressId = billingAddress.Id;
+            customer.ShippingAddressId = shippingAddress.Id;
+
+            await _customerService.UpdateCustomerAsync(customer);
+        }
 
         //model
         var model = await _checkoutModelFactory.PrepareConfirmOrderModelAsync(cart);
