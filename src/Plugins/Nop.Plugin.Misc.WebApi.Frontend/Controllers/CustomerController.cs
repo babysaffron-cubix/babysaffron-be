@@ -495,7 +495,6 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             otpValidationResult.ResultMessage = "Otp is validated";
             otpValidationResult.status_code = StatusCodes.Status200OK;
             var loginOrRegisterResponse = await LoginOrRegister(email);
-            await _salesforceService.UpsertSalesforceCustomerAsync(loginOrRegisterResponse.CustomerId);
             return Ok(loginOrRegisterResponse);
         }
 
@@ -613,7 +612,6 @@ public partial class CustomerController : BaseNopWebApiFrontendController
                 if(emailFromValidation == request.Email)
                 {
                     var loginOrRegisterResponse = await LoginOrRegister(emailFromValidation);
-                    await _salesforceService.UpsertSalesforceCustomerAsync(loginOrRegisterResponse.CustomerId);
                     return Ok(loginOrRegisterResponse);
                 }
             }
@@ -1716,7 +1714,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     [HttpPost]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(AddressAddResponse), StatusCodes.Status200OK)]
-    public virtual async Task<IActionResult> AddressAdd([FromBody] BaseModelDtoRequest<CustomerAddressEditModelDto> request)
+    public virtual async Task<IActionResult> AddressAdd([FromBody] BaseModelDtoRequest<CustomerAddressEditModelDto> request, [FromQuery] bool isFirstAddress = false)
     {
         var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -1758,6 +1756,12 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             addressSettings: _addressSettings,
             loadCountries: async () => await _countryService.GetAllCountriesAsync((await _workContext.GetWorkingLanguageAsync()).Id),
             overrideAttributesXml: customAttributes);
+
+        if (isFirstAddress)
+        {
+            // call the salesforce api to save the address
+            await _salesforceService.UpsertSalesforceCustomerAsync(customer.Id, model.Address.Id);
+        }
 
         return Ok(new AddressAddResponse()
         {

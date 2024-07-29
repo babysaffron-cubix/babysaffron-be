@@ -160,23 +160,32 @@ public class SalesforceService : ISalesforceService
     /// </summary>
     /// <param name="customerId"></param>
     /// <returns></returns>
-    public async Task<SalesforceContactUpsertResponse> UpsertSalesforceCustomerAsync(int customerId)
+    public async Task<SalesforceContactUpsertResponse> UpsertSalesforceCustomerAsync(int customerId, int? addressId = null)
     {
         try
         {
-
-        
-        var customer = await _customerService.GetCustomerByIdAsync(customerId);
-        SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
+            var customer = await _customerService.GetCustomerByIdAsync(customerId);
+            SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
         if (customer != null)
         {
-            int addressId = customer.BillingAddressId != null ? Convert.ToInt32(customer.BillingAddressId) : (customer.ShippingAddressId != null ? Convert.ToInt32(customer.ShippingAddressId) : 0);
+
+            int addressIdForSalesforce = addressId != null ? Convert.ToInt32(addressId) : (customer.BillingAddressId != null ? Convert.ToInt32(customer.BillingAddressId) : (customer.ShippingAddressId != null ? Convert.ToInt32(customer.ShippingAddressId) : 0));
             var addresses = addressId > 0 ? await _customerModelFactory.PrepareCustomerAddressModelByCustomerIdAsync(customerId) : null;
 
             var address = (addresses != null && addresses.Addresses != null &&  addresses.Addresses.Count() > 0) ? addresses.Addresses[0] : null;
 
-            //get sfdc contact number, which might have been saved the last time in the db
-            string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
+                // there is a possibility that the customer has just registered with email and does not have a first, last name.
+                // in this case, fetch the first, last name from the address and use it to updated the customer. Later this updated detail will be send to salesforce
+                if (customer.FirstName == null || customer.LastName == null)
+                {
+                    customer.FirstName = address.FirstName;
+                    customer.LastName = address.LastName;
+
+                    await _customerService.UpdateCustomerAsync(customer);
+                }
+
+                //get sfdc contact number, which might have been saved the last time in the db
+                string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
 
             SalesforceContactUpsertRequest salesforceContactUpsertRequest = new SalesforceContactUpsertRequest() { Contacts = new List<SalesforceContacts>() };
 
