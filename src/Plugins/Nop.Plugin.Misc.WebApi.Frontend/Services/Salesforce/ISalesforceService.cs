@@ -5,7 +5,7 @@ namespace Nop.Plugin.Misc.WebApi.Frontend.Services;
 
 public interface ISalesforceService
 { 
-    Task<SalesforceContactUpsertResponse> UpsertSalesforceCustomerAsync(int customerId);
+    Task<SalesforceContactUpsertResponse> UpsertSalesforceCustomerAsync(int customerId, int? addressId = null);
 
     Task<SalesforceOrderResponse> CreateSalesforceOrder(int orderId);
 

@@ -577,13 +577,23 @@ public partial class ProductController : BaseNopWebApiFrontendController
     [HttpGet("{seoFriendlyName}")]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(typeof(ProductDetailsResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProductOverviewModelDto), StatusCodes.Status200OK)]
     public virtual async Task<IActionResult> GetProductBySeoFriendlyNameAsync(string seoFriendlyName)
     {
         if (!String.IsNullOrEmpty(seoFriendlyName))
         {
-            var products = await _productService.GetProductBySeoFriendlyNameAsync(seoFriendlyName);
-            return Ok(products);
+            var product = await _productService.GetProductBySeoFriendlyNameAsync(seoFriendlyName);
+            List<Product> products = new List<Product>() { product };
+            var model = (await _productModelFactory.PrepareProductOverviewModelsAsync(products, true, true, null, true, false)).ToList();
+
+            if(model != null && model.Count > 0)
+            {
+                var modelDTo = model[0].ToDto<ProductOverviewModelDto>();
+                return Ok(modelDTo);
+            }
+            //var modelDto = model.Select(p => p.ToDto<ProductOverviewModelDto>()).ToList();
+
+            return Ok();
         }
         return BadRequest();
         
