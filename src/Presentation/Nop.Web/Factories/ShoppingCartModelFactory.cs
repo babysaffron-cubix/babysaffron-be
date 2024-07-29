@@ -1067,6 +1067,9 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
         {
             var store = await _storeContext.GetCurrentStoreAsync();
             var cart = await _shoppingCartService.GetShoppingCartAsync(customer, ShoppingCartType.ShoppingCart, store.Id);
+            var orderTotalsModel = await PrepareOrderTotalsModelAsync(cart, true);
+            model.OrderTotalsModel = orderTotalsModel;
+
 
             if (cart.Any())
             {
