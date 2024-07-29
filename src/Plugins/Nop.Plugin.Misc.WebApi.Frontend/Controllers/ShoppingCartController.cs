@@ -1050,6 +1050,7 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
 
         var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync();
 
+
         return Ok(model.ToDto<MiniShoppingCartModelDto>());
     }
 
@@ -1116,17 +1117,17 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
         //await ParseAndSaveCheckoutAttributesAsync(cart, form);
 
         //prepare request
-        var model = new ShoppingCartModel();
-        model = await _shoppingCartModelFactory.PrepareShoppingCartModelAsync(model, cart);
+        //var model = new ShoppingCartModel();
+        //model = await _shoppingCartModelFactory.PrepareShoppingCartModelAsync(model, cart);
 
         //update current warnings
-        foreach (var warningItem in warnings.Where(warningItem => warningItem.Warnings.Any()))
-        {
-            //find shopping cart item request to display appropriate warnings
-            var itemModel = model.Items.FirstOrDefault(item => item.Id == warningItem.ItemId);
-            if (itemModel != null)
-                itemModel.Warnings = warningItem.Warnings.Concat(itemModel.Warnings).Distinct().ToList();
-        }
+        //foreach (var warningItem in warnings.Where(warningItem => warningItem.Warnings.Any()))
+        //{
+        //    //find shopping cart item request to display appropriate warnings
+        //    var itemModel = model.Items.FirstOrDefault(item => item.Id == warningItem.ItemId);
+        //    if (itemModel != null)
+        //        itemModel.Warnings = warningItem.Warnings.Concat(itemModel.Warnings).Distinct().ToList();
+        //}
 
         // if cart count is 0, then check if the discount was applied for this user and delete it
         if (cart.Count() == 0)
@@ -1135,7 +1136,12 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
             await _genericAttributeService.SaveAttributeAsync<string>(customer, NopCustomerDefaults.DiscountCouponCodeAttribute, null);
         }
 
-        return Ok(model.ToDto<ShoppingCartModelDto>());
+        //return Ok(model.ToDto<ShoppingCartModelDto>());
+
+
+        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync();
+
+        return Ok(model.ToDto<MiniShoppingCartModelDto>());
     }
 
     [HttpPost]

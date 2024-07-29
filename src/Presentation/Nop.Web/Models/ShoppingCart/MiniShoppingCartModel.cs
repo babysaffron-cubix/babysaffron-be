@@ -25,6 +25,8 @@ public partial record MiniShoppingCartModel : BaseNopModel
     public decimal SubTotalValueWithDiscount { get; set; }
     public DiscountBoxModel DiscountBox { get; set; }
 
+    public OrderTotalsModel OrderTotalsModel { get; set; }
+
     #region Nested Classes
 
     public partial record ShoppingCartItemModel : BaseNopEntityModel

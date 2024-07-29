@@ -26,7 +26,7 @@ public partial class MiniShoppingCartModelDto : ModelDto
     public decimal DiscountAmount { get; set; }
     public decimal SubTotalValueWithDiscount { get; set; }
     public DiscountBoxModelDto DiscountBox { get; set; }
-
+    public OrderTotalsModelDto OrderTotalsModel { get; set; }
 
     #region
 
