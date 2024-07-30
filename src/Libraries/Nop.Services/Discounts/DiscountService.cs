@@ -328,15 +328,28 @@ public partial class DiscountService : IDiscountService
         //first we check simple discounts
         foreach (var discount in discounts)
         {
-            var currentDiscountValue = GetDiscountAmount(discount, amount);
-            if (currentDiscountValue <= discountAmount)
-                continue;
+            if (!discount.RequiresCouponCode)
+            {
 
-            discountAmount = currentDiscountValue;
+                var currentDiscountValue = GetDiscountAmount(discount, amount);
+                if (currentDiscountValue <= discountAmount)
+                    continue;
 
-            result.Clear();
-            result.Add(discount);
+                discountAmount = currentDiscountValue;
+
+                result.Clear();
+                result.Add(discount);
+            }
+            else
+            {
+                var discountFromCoupon = GetDiscountAmount(discount, amount);
+                discountAmount += discountFromCoupon;
+
+                result.Add(discount);
+            }
         }
+
+
         //now let's check cumulative discounts
         //right now we calculate discount values based on the original amount value
         //please keep it in mind if you're going to use discounts with "percentage"

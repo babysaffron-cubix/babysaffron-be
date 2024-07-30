@@ -3,9 +3,11 @@ namespace Nop.Services.Customers;
 
 public partial interface IOtpSenderService
 {
-    Task<OtpGeneratorResult> RequestOtp(string emailOrPhone);
+    Task<EmailSendResult> RequestOtp(string emailOrPhone);
     Task SendWelcomeEmail(string email);
 
-    Task SendSupportEmail(SupportEmailRequest supportEmailRequest);
+    Task<EmailSendResult> SendSupportEmail(SupportEmailRequest supportEmailRequest);
+    Task<EmailSendResult> SendContactUsEmail(ContactUsEmailRequest contactUsEmailRequest);
+
 }
 

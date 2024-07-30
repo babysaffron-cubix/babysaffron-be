@@ -1,5 +1,9 @@
 ﻿using System.Globalization;
+using System.Text.Json;
+using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Primitives;
+using Newtonsoft.Json.Linq;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
@@ -8,6 +12,7 @@ using Nop.Core.Domain.Forums;
 using Nop.Core.Domain.Gdpr;
 using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Salesforce;
 using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Tax;
 using Nop.Core.Domain.Vendors;
@@ -16,6 +21,7 @@ using Nop.Services.Authentication.External;
 using Nop.Services.Authentication.MultiFactor;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
+using Nop.Services.Common.Salesforce;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Gdpr;
@@ -77,8 +83,11 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     protected readonly SecuritySettings _securitySettings;
     protected readonly TaxSettings _taxSettings;
     protected readonly IAddressService _addressService;
+    protected readonly ISalesforceCommonService _salesforceCommonService;
     protected readonly VendorSettings _vendorSettings;
 
+    private static readonly char[] _separator = [','];
+     
     #endregion
 
     #region Ctor
@@ -121,7 +130,8 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         SecuritySettings securitySettings,
         TaxSettings taxSettings,
         VendorSettings vendorSettings,
-        IAddressService addressService)
+        IAddressService addressService,
+        ISalesforceCommonService salesforceCommonService)
     {
         _addressSettings = addressSettings;
         _captchaSettings = captchaSettings;
@@ -162,6 +172,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         _taxSettings = taxSettings;
         _vendorSettings = vendorSettings;
         _addressService = addressService;
+        _salesforceCommonService = salesforceCommonService;
     }
 
     #endregion
@@ -1118,6 +1129,226 @@ public partial class CustomerModelFactory : ICustomerModelFactory
 
         return model;
     }
+
+
+    /// <summary>
+    /// for preparing a model of salesforce request for creating customer at salesforce
+    /// </summary>
+    /// <param name="customerId"></param>
+    /// <param name="addressId"></param>
+    /// <returns></returns>
+    public async Task<SalesforceContactUpsertResponse> PrepareSalesforceResponseModelForCustomer(int customerId, int? addressId = null)
+    {
+        try
+        {
+            var customer = await _customerService.GetCustomerByIdAsync(customerId);
+            SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
+            if (customer != null)
+            {
+
+                int addressIdForSalesforce = addressId != null ? Convert.ToInt32(addressId) : (customer.BillingAddressId != null ? Convert.ToInt32(customer.BillingAddressId) : (customer.ShippingAddressId != null ? Convert.ToInt32(customer.ShippingAddressId) : 0));
+                var addresses = addressIdForSalesforce == 0 ? await PrepareCustomerAddressModelByCustomerIdAsync(customerId) : await PrepareAddressModelByAddressIdsAsync(new List<int>() { addressIdForSalesforce });
+
+                var address = (addresses != null && addresses.Addresses != null && addresses.Addresses.Count() > 0) ? addresses.Addresses[0] : null;
+
+                // there is a possibility that the customer has just registered with email and does not have a first, last name.
+                // in this case, fetch the first, last name from the address and use it to updated the customer. Later this updated detail will be send to salesforce
+                if (customer.FirstName == null || customer.LastName == null)
+                {
+                    customer.FirstName = address.FirstName;
+                    customer.LastName = address.LastName;
+
+                    await _customerService.UpdateCustomerAsync(customer);
+                }
+
+                //get sfdc contact number, which might have been saved the last time in the db
+                string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
+
+                SalesforceContactUpsertRequest salesforceContactUpsertRequest = new SalesforceContactUpsertRequest() { Contacts = new List<SalesforceContacts>() };
+
+                SalesforceContacts salesforceContacts = new SalesforceContacts()
+                {
+                    FirstName = customer.FirstName,
+                    LastName = customer.LastName,
+                    EmailId = customer.Email,
+                    Mobile = customer.Phone,
+                    State = address != null ? address.StateProvinceName : null,
+                    City = address != null ? address.City : null,
+                    Address = address != null ? address.Address1 : null,
+                    Pincode = address != null ? address.ZipPostalCode : null,
+                    Country = address != null ? address.CountryName : null,
+                    Gender = customer.Gender,
+                    OAuthProvider = "Google",
+                    SFDCContactNumber = sfdcContactNumber
+                };
+                salesforceContactUpsertRequest.Contacts.Add(salesforceContacts);
+
+
+                #region MakeAPICall
+
+
+                var contactJsonString = JsonSerializer.Serialize(salesforceContactUpsertRequest);
+                string endpoint = "apexrest/Web2SFDCcontactUpsert";
+                var responseContent = await _salesforceCommonService.SalesforceAPICallHandler(endpoint, contactJsonString);
+
+                if (responseContent != null)
+                {
+                    var jsonToken = JToken.Parse(responseContent);
+                    JArray jsonArray = (JArray)jsonToken;
+                    foreach (JObject json in jsonArray)
+                    {
+                        string sfdcNumber = json["SFDCNumber"]?.ToString();
+                        salesforceOrderResponse.SFDCNumber = sfdcNumber;
+                        salesforceOrderResponse.SFDCRecordId = json["SFDCRecordId"]?.ToString();
+                        salesforceOrderResponse.ResultMsg = json["ResultMsg"]?.ToString();
+                        salesforceOrderResponse.CalloutErrorResult = Convert.ToBoolean(json["CalloutErrorResult"]);
+
+                        if (sfdcNumber != null)
+                        {
+                            IDictionary<string, string> form = new Dictionary<string, string>();
+                            form.Add("customer_attribute_1", sfdcNumber);
+                            var updatedCustomCustomerAttributeXML = await ParseCustomCustomerAttributesAsync(form);
+                            customer.CustomCustomerAttributesXML = updatedCustomCustomerAttributeXML;
+                            await _customerService.UpdateCustomerAsync(customer);
+                        }
+                    }
+                }
+                #endregion
+
+
+
+            }
+
+
+            SalesforceContactUpsertResponse salesforceContactUpsertResponse = new SalesforceContactUpsertResponse() { SalesforceResponse = new List<SalesforceOrderResponse>() };
+            salesforceContactUpsertResponse.SalesforceResponse.Add(salesforceOrderResponse);
+            return salesforceContactUpsertResponse;
+
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    /// <summary>
+    /// Get existing SFDCNumber for the current customer, if any
+    /// </summary>
+    /// <param name="customCustomerAttributeXML"></param>
+    /// <returns></returns>
+    private async Task<string> GetSFDCNumber(String customCustomerAttributeXML)
+    {
+        return await Task.Run(() =>
+        {
+
+            XDocument xmlDoc = XDocument.Parse(customCustomerAttributeXML);
+
+            var customerAttributes = xmlDoc
+                                    .Element("Attributes")
+                                    .Elements("CustomerAttribute");
+
+            foreach (var customerAttribute in customerAttributes)
+            {
+                XElement valueElement = customerAttribute
+                                        .Element("CustomerAttributeValue")
+                                        .Element("Value");
+
+                string value = valueElement.Value.Trim();
+
+                if (value.Contains("CON"))
+                {
+                    return value;
+                }
+
+            }
+            return null;
+        });
+    }
+
+
+    /// <summary>
+    /// Parse SFDCNumber to xml, to save it for the customer
+    /// </summary>
+    /// <param name="form"></param>
+    /// <returns></returns>
+    protected virtual async Task<string> ParseCustomCustomerAttributesAsync(IDictionary<string, string> form)
+    {
+        ArgumentNullException.ThrowIfNull(form);
+
+        var attributesXml = string.Empty;
+        var attributes = await _customerAttributeService.GetAllAttributesAsync();
+        foreach (var attribute in attributes)
+        {
+            var controlId = $"{NopCustomerServicesDefaults.CustomerAttributePrefix}{attribute.Id}";
+            switch (attribute.AttributeControlType)
+            {
+                case AttributeControlType.DropdownList:
+                case AttributeControlType.RadioList:
+                    {
+                        var ctrlAttributes = form[controlId];
+                        if (!StringValues.IsNullOrEmpty(ctrlAttributes))
+                        {
+                            var selectedAttributeId = int.Parse(ctrlAttributes);
+                            if (selectedAttributeId > 0)
+                                attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                    attribute, selectedAttributeId.ToString());
+                        }
+                    }
+
+                    break;
+                case AttributeControlType.Checkboxes:
+                    {
+                        var cblAttributes = form[controlId];
+                        if (!StringValues.IsNullOrEmpty(cblAttributes))
+                            foreach (var item in cblAttributes.Split(_separator, StringSplitOptions.RemoveEmptyEntries))
+                            {
+                                var selectedAttributeId = int.Parse(item);
+                                if (selectedAttributeId > 0)
+                                    attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                        attribute, selectedAttributeId.ToString());
+                            }
+                    }
+
+                    break;
+                case AttributeControlType.ReadonlyCheckboxes:
+                    {
+                        //load read-only (already server-side selected) values
+                        var attributeValues = await _customerAttributeService.GetAttributeValuesAsync(attribute.Id);
+                        foreach (var selectedAttributeId in attributeValues
+                                     .Where(v => v.IsPreSelected)
+                                     .Select(v => v.Id)
+                                     .ToList())
+                            attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                attribute, selectedAttributeId.ToString());
+                    }
+
+                    break;
+                case AttributeControlType.TextBox:
+                case AttributeControlType.MultilineTextbox:
+                    {
+                        var ctrlAttributes = form[controlId];
+                        if (!StringValues.IsNullOrEmpty(ctrlAttributes))
+                        {
+                            var enteredText = ctrlAttributes.Trim();
+                            attributesXml = _customerAttributeParser.AddAttribute(attributesXml,
+                                attribute, enteredText);
+                        }
+                    }
+
+                    break;
+                case AttributeControlType.Datepicker:
+                case AttributeControlType.ColorSquares:
+                case AttributeControlType.ImageSquares:
+                case AttributeControlType.FileUpload:
+                //not supported customer attributes
+                default:
+                    break;
+            }
+        }
+
+        return attributesXml;
+    }
+
 
     #endregion
 }

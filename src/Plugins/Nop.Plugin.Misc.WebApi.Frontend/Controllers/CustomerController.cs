@@ -739,9 +739,23 @@ public partial class CustomerController : BaseNopWebApiFrontendController
     [ProducesResponseType(typeof(OtpRelatedResponse), StatusCodes.Status200OK)]
     public virtual async Task<IActionResult> SendSupportEmail([FromBody]SupportEmailRequest supportEmailRequest)
     {
-        //OtpRelatedResponse otpGenerateResponse = new OtpRelatedResponse();
-        await _customerService.SendSupportEmail(supportEmailRequest);
-        return Ok();
+        var response = await _customerService.SendSupportEmail(supportEmailRequest);
+        return Ok(response);
+
+    }
+
+
+    /// <summary>
+    /// Send contact us email
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ProducesResponseType(typeof(OtpRelatedResponse), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> SendContactUsEmail([FromBody] ContactUsEmailRequest contactUsEmailRequest)
+    {
+        var response = await _customerService.SendContactUsEmail(contactUsEmailRequest);
+        return Ok(response);
 
     }
 

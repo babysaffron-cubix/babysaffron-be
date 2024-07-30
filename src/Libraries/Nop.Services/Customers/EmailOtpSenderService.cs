@@ -26,6 +26,8 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
     protected readonly string _sendGridWelcomeEmailTemplateId;
     protected readonly string _sendGridSupportEmailTemplateId;
     protected readonly string _sendGridSupportContactEmailId;
+    protected readonly string _sendGridContactUsEmailTemplateId;
+
     #endregion
 
     #region Ctor
@@ -53,13 +55,14 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         _sendGridWelcomeEmailTemplateId = _configuration["AppSettings:SendGridWelcomeEmailTemplateId"];
         _sendGridSupportEmailTemplateId = _configuration["AppSettings:SendGridSupportEmailTemplateId"];
         _sendGridSupportContactEmailId = _configuration["AppSettings:SendGridSupportContactEmailId"];
+        _sendGridContactUsEmailTemplateId = _configuration["AppSettings:SendGridContactUsEmailTemplateId"];
 
     }
 
 
     #endregion
 
-    public async Task<OtpGeneratorResult> RequestOtp(string email)
+    public async Task<EmailSendResult> RequestOtp(string email)
     {
 
         var response = await SendEmailUsingTemplate(email);
@@ -68,9 +71,9 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
 
 
-    private  async Task<OtpGeneratorResult> SendEmailUsingTemplate(string email)
+    private  async Task<EmailSendResult> SendEmailUsingTemplate(string email)
     {
-        OtpGeneratorResult otpGeneratorResult = new OtpGeneratorResult();
+        EmailSendResult emailSendResult  = new EmailSendResult();
 
         try
         {
@@ -85,15 +88,15 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
                 to: email,
                 pathServiceSid: _sendGridPathServiceSid);
 
-            otpGeneratorResult.Message = "OTP generated successfully and sent over email.";
-            return otpGeneratorResult;
+            emailSendResult.Message = "OTP generated successfully and sent over email.";
+            return emailSendResult;
 
         }
        
         catch (Exception ex)
         {
-            otpGeneratorResult.AddError(ex.Message);
-            return otpGeneratorResult;
+            emailSendResult.AddError(ex.Message);
+            return emailSendResult;
         }
     }
 
@@ -129,18 +132,19 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         }
     }
 
-    public async Task SendSupportEmail(SupportEmailRequest supportEmailRequest)
-    {
+    public async Task<EmailSendResult> SendSupportEmail(SupportEmailRequest supportEmailRequest)
+    {   EmailSendResult emailSendResult = new EmailSendResult();
         try
         {
-            var client = new SendGridClient(_sendGridApiKey);
-            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
-            var to = new EmailAddress(supportEmailRequest.Email, supportEmailRequest.Email);
+            if (String.IsNullOrEmpty(supportEmailRequest.Email) || String.IsNullOrEmpty(supportEmailRequest.IssueHeading))
+            {
+                emailSendResult.AddError("Missing details");
+                return emailSendResult;
 
-            //var msg = new SendGridMessage();
-            //msg.SetFrom(from);
-            //msg.AddTo(to);
-            //msg.SetTemplateId(_sendGridSupportEmailTemplateId);
+            }
+            var client = new SendGridClient(_sendGridApiKey);
+            var to = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var from = new EmailAddress(supportEmailRequest.Email, supportEmailRequest.Email);
 
             var dynamicTemplateData = new
             {
@@ -154,10 +158,60 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
 
             var response = await client.SendEmailAsync(msg);
+
+            emailSendResult.Message = "Suport email sent.";
+            return emailSendResult;
+
         }
         catch (Exception ex)
         {
-            throw ex;
+            emailSendResult.AddError(ex.Message);
+            return emailSendResult;
+        }
+    }
+
+
+    public async Task<EmailSendResult> SendContactUsEmail(ContactUsEmailRequest contactUsEmailRequest)
+    {
+        EmailSendResult emailSendResult = new EmailSendResult();
+        try
+        {
+            if (String.IsNullOrEmpty(contactUsEmailRequest.Email) || string.IsNullOrEmpty(contactUsEmailRequest.FirstName) || string.IsNullOrEmpty(contactUsEmailRequest.Message))
+            {
+                emailSendResult.AddError("Missing details.");
+                return emailSendResult;
+            }
+           
+            var client = new SendGridClient(_sendGridApiKey);
+            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var to = new EmailAddress(contactUsEmailRequest.Email, contactUsEmailRequest.FirstName);
+
+            var dynamicTemplateData = new
+            {
+                OnMind = contactUsEmailRequest.OnMind,
+                GetBackReason = contactUsEmailRequest.GetBackReason,
+                Message = contactUsEmailRequest.Message,
+                FirstName = contactUsEmailRequest.FirstName,
+                LastName = contactUsEmailRequest.LastName,
+                Country = contactUsEmailRequest.Country,
+                PhoneNo = contactUsEmailRequest.PhoneNo,
+                Email = contactUsEmailRequest.Email
+            };
+
+            // Create a message using the template ID and dynamic data
+            var msg = MailHelper.CreateSingleTemplateEmail(from, to, _sendGridContactUsEmailTemplateId, dynamicTemplateData);
+
+
+            var response = await client.SendEmailAsync(msg);
+
+            emailSendResult.Message = "ContactUs email sent.";
+            return emailSendResult;
+
+        }
+        catch (Exception ex)
+        {
+            emailSendResult.AddError(ex.Message);
+            return emailSendResult;
         }
     }
 }

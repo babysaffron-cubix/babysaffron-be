@@ -1,7 +1,7 @@
 ﻿using System;
 namespace Nop.Services.Customers;
 
-public partial class OtpGeneratorResult
+public partial class EmailSendResult
 {
 
 	/// <summary>
@@ -9,7 +9,7 @@ public partial class OtpGeneratorResult
 	/// </summary>
 	public IList<string> Errors { get; set; }
 
-	public OtpGeneratorResult()
+	public EmailSendResult()
 	{
 		Errors = new List<string>();
 	}

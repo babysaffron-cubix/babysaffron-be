@@ -1,6 +1,7 @@
 ﻿using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Orders;
+using Nop.Core.Domain.Salesforce;
 using Nop.Web.Models.Customer;
 
 namespace Nop.Web.Factories;
@@ -193,4 +194,13 @@ public partial interface ICustomerModelFactory
     /// <param name="addressIds"></param>
     /// <returns></returns>
     Task<CustomerAddressListModel> PrepareAddressModelByAddressIdsAsync(List<int> addressIds);
+
+
+    /// <summary>
+    /// for preparing a model of salesforce request for creating customer at salesforce
+    /// </summary>
+    /// <param name="customerId"></param>
+    /// <param name="addressId"></param>
+    /// <returns></returns>
+    Task<SalesforceContactUpsertResponse> PrepareSalesforceResponseModelForCustomer(int customerId, int? addressId = null);
 }

@@ -13,6 +13,7 @@ using Nop.Core.Domain.Tax;
 using Nop.Core.Events;
 using Nop.Services.Attributes;
 using Nop.Services.Common;
+using Nop.Services.Common.Salesforce;
 using Nop.Services.Customers;
 using Nop.Services.ExportImport;
 using Nop.Services.Forums;
@@ -31,6 +32,7 @@ using Nop.Web.Areas.Admin.Models.Customers;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Mvc;
 using Nop.Web.Framework.Mvc.Filters;
+
 
 namespace Nop.Web.Areas.Admin.Controllers;
 
@@ -72,6 +74,7 @@ public partial class CustomerController : BaseAdminController
     protected readonly IWorkflowMessageService _workflowMessageService;
     protected readonly TaxSettings _taxSettings;
     private static readonly char[] _separator = [','];
+    private readonly Web.Factories.ICustomerModelFactory _customerModelFactoryWeb;
 
     #endregion
 
@@ -109,7 +112,8 @@ public partial class CustomerController : BaseAdminController
         ITaxService taxService,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
-        TaxSettings taxSettings)
+        TaxSettings taxSettings,
+        Web.Factories.ICustomerModelFactory customerModelFactoryWeb)
     {
         _customerSettings = customerSettings;
         _dateTimeSettings = dateTimeSettings;
@@ -144,6 +148,7 @@ public partial class CustomerController : BaseAdminController
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
         _taxSettings = taxSettings;
+        _customerModelFactoryWeb = customerModelFactoryWeb;
     }
 
     #endregion
@@ -1750,4 +1755,14 @@ public partial class CustomerController : BaseAdminController
     }
 
     #endregion
-}
+
+
+    [HttpPost, ActionName("Edit")]
+    [FormValueRequired("sandtosalesforce")]
+    public virtual async Task<IActionResult> SendToSalesforce(CustomerModel model)
+    {
+        await _customerModelFactoryWeb.PrepareSalesforceResponseModelForCustomer(model.Id);
+        //modelawait _salesforceCommonService.
+        return RedirectToAction("Edit", new { id = model.Id });
+    }
+    }

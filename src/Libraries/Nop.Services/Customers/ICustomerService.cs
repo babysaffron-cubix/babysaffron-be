@@ -373,7 +373,7 @@ public partial interface ICustomerService
     /// A task that represents the asynchronous operation
     /// The task result contains the response of otp sent to email
     /// </returns>
-    Task<OtpGeneratorResult> GenerateOtp(string email);
+    Task<EmailSendResult> GenerateOtp(string email);
 
 
     /// <summary>
@@ -385,11 +385,19 @@ public partial interface ICustomerService
     Task<OtpValidationResult> ValidateOtp(string email, string otp);
 
     /// <summary>
-    /// 
+    /// to send email for support on an order
     /// </summary>
     /// <param name="supportEmailRequest"></param>
     /// <returns></returns>
-    Task SendSupportEmail(SupportEmailRequest supportEmailRequest);
+    Task<EmailSendResult> SendSupportEmail(SupportEmailRequest supportEmailRequest);
+
+
+    /// <summary>
+    /// to send email for contacting the team
+    /// </summary>
+    /// <param name="contactUsEmailRequest"></param>
+    /// <returns></returns>
+    Task<EmailSendResult> SendContactUsEmail(ContactUsEmailRequest contactUsEmailRequest);
 
     #endregion
 
