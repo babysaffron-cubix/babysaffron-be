@@ -6,6 +6,7 @@ using Twilio;
 using Twilio.Rest.Verify.V2.Service;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
+using DocumentFormat.OpenXml.Spreadsheet;
 
 namespace Nop.Services.Customers;
 
@@ -23,6 +24,8 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
     protected readonly string _sendGridSenderEmailId;
     protected readonly string _sendGridSenderName;
     protected readonly string _sendGridWelcomeEmailTemplateId;
+    protected readonly string _sendGridSupportEmailTemplateId;
+    protected readonly string _sendGridSupportContactEmailId;
     #endregion
 
     #region Ctor
@@ -48,6 +51,8 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         _sendGridSenderEmailId = _configuration["AppSettings:SendGridSenderEmailId"];
         _sendGridSenderName = _configuration["AppSettings:SendGridSenderName"];
         _sendGridWelcomeEmailTemplateId = _configuration["AppSettings:SendGridWelcomeEmailTemplateId"];
+        _sendGridSupportEmailTemplateId = _configuration["AppSettings:SendGridSupportEmailTemplateId"];
+        _sendGridSupportContactEmailId = _configuration["AppSettings:SendGridSupportContactEmailId"];
 
     }
 
@@ -118,6 +123,38 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
         }
 
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+    }
+
+    public async Task SendSupportEmail(SupportEmailRequest supportEmailRequest)
+    {
+        try
+        {
+            var client = new SendGridClient(_sendGridApiKey);
+            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var to = new EmailAddress(supportEmailRequest.Email, supportEmailRequest.Email);
+
+            //var msg = new SendGridMessage();
+            //msg.SetFrom(from);
+            //msg.AddTo(to);
+            //msg.SetTemplateId(_sendGridSupportEmailTemplateId);
+
+            var dynamicTemplateData = new
+            {
+                Issue = supportEmailRequest.IssueHeading,
+                IssueDescription = supportEmailRequest.IssueDescription,
+                From = supportEmailRequest.Email
+            };
+
+            // Create a message using the template ID and dynamic data
+            var msg = MailHelper.CreateSingleTemplateEmail(from, to, _sendGridSupportEmailTemplateId, dynamicTemplateData);
+
+
+            var response = await client.SendEmailAsync(msg);
+        }
         catch (Exception ex)
         {
             throw ex;

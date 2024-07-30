@@ -1732,6 +1732,23 @@ public partial class CustomerService : ICustomerService
     }
 
 
+
+    /// <summary>
+    /// Generate an email for support team
+    /// </summary>
+    /// <param name="email">email on which otp needs to be sent</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// the task result contains the result
+    /// </returns>
+    public virtual async Task SendSupportEmail(SupportEmailRequest supportEmailRequest)
+    {
+
+        await _otpSenderService.SendSupportEmail(supportEmailRequest);
+
+    }
+
+
     /// <summary>
     /// Validate the otp which was sent to the input email
     /// </summary>

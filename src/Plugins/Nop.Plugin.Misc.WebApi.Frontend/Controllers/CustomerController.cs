@@ -729,6 +729,22 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         return Ok();
     }
 
+
+    /// <summary>
+    /// Send support email
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    [HttpPost]
+    [ProducesResponseType(typeof(OtpRelatedResponse), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> SendSupportEmail([FromBody]SupportEmailRequest supportEmailRequest)
+    {
+        //OtpRelatedResponse otpGenerateResponse = new OtpRelatedResponse();
+        await _customerService.SendSupportEmail(supportEmailRequest);
+        return Ok();
+
+    }
+
     #endregion
 
     #region Password recovery

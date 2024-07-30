@@ -384,6 +384,13 @@ public partial interface ICustomerService
     /// <returns></returns>
     Task<OtpValidationResult> ValidateOtp(string email, string otp);
 
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="supportEmailRequest"></param>
+    /// <returns></returns>
+    Task SendSupportEmail(SupportEmailRequest supportEmailRequest);
+
     #endregion
 
     #region Customer roles
