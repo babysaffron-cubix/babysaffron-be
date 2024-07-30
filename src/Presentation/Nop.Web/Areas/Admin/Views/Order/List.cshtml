@@ -381,6 +381,11 @@
                                             Width = "100",
                                         });
                                     }
+                                    gridModel.ColumnCollection.Add(new ColumnProperty(nameof(OrderModel.AuthorizationTransactionCode))
+                                    {
+                                        Title = T("Admin.Orders.Fields.AuthorizationTransactionCode").Text,
+                                        Width = "100",
+                                    });
                                     gridModel.ColumnCollection.Add(new ColumnProperty(nameof(OrderModel.Id))
                                     {
                                         Title = T("Admin.Common.View").Text,
