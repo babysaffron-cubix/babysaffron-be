@@ -166,6 +166,10 @@ public partial record OrderModel : BaseNopEntityModel
     //misc payment info
     [NopResourceDisplayName("Admin.Orders.Fields.AuthorizationTransactionID")]
     public string AuthorizationTransactionId { get; set; }
+
+    [NopResourceDisplayName("Admin.Orders.Fields.AuthorizationTransactionCode")]
+    public string AuthorizationTransactionCode { get; set; }
+
     [NopResourceDisplayName("Admin.Orders.Fields.CaptureTransactionID")]
     public string CaptureTransactionId { get; set; }
     [NopResourceDisplayName("Admin.Orders.Fields.SubscriptionTransactionID")]

@@ -12960,6 +12960,9 @@
   <LocaleResource Name="Admin.Orders.Fields.AuthorizationTransactionID">
     <Value>Authorization transaction ID</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Orders.Fields.AuthorizationTransactionCode">
+    <Value>Order SFDCNumber</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Orders.Fields.AuthorizationTransactionID.Hint">
     <Value>Authorization transaction identifier received from your payment gateway.</Value>
   </LocaleResource>
@@ -13210,7 +13213,7 @@
     <Value>Partial refund (Offline)</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Orders.Fields.PaymentMethod">
-    <Value>Payment method</Value>
+    <Value>Payment M6ethod</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Orders.Fields.PaymentMethod.Hint">
     <Value>The payment method used for this transaction. You can manage Payment Methods from Configuration &gt; Payment &gt; Payment Methods.</Value>
@@ -13402,7 +13405,7 @@
     <Value>Search by a specific order status e.g. Complete.</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Orders.List.PaymentMethod">
-    <Value>Payment method</Value>
+    <Value>Payment MMMethod</Value>
   </LocaleResource>
   <LocaleResource Name="Admin.Orders.List.PaymentMethod.Hint">
     <Value>Search by a specific payment method.</Value>
@@ -16687,7 +16690,7 @@
     <Value>Payment information</Value>
   </LocaleResource>
   <LocaleResource Name="Checkout.PaymentMethod">
-    <Value>Payment method</Value>
+    <Value>Payment MMMethod</Value>
   </LocaleResource>
   <LocaleResource Name="Checkout.PickupPoints">
     <Value>Pickup</Value>
@@ -18223,7 +18226,7 @@
     <Value>Payment</Value>
   </LocaleResource>
   <LocaleResource Name="Order.Payment.Method">
-    <Value>Payment Method</Value>
+    <Value>Payment MMMMethod</Value>
   </LocaleResource>
   <LocaleResource Name="Order.Payment.Status">
     <Value>Payment Status</Value>
@@ -18613,7 +18616,7 @@
     <Value>Name</Value>
   </LocaleResource>
   <LocaleResource Name="Pdf.Address.PaymentMethod">
-    <Value>Payment method</Value>
+    <Value>Payment MMMMMethod</Value>
   </LocaleResource>
   <LocaleResource Name="Pdf.Address.Phone">
     <Value>Phone</Value>
