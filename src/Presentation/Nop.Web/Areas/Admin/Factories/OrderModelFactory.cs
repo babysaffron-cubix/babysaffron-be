@@ -1059,7 +1059,8 @@ public partial class OrderModelFactory : IOrderModelFactory
                     CustomerEmail = billingAddress.Email,
                     CustomerFullName = $"{billingAddress.FirstName} {billingAddress.LastName}",
                     CustomerId = order.CustomerId,
-                    CustomOrderNumber = order.CustomOrderNumber
+                    CustomOrderNumber = order.CustomOrderNumber,
+                    AuthorizationTransactionCode = order.AuthorizationTransactionCode
                 };
 
                 //convert dates to the user time
