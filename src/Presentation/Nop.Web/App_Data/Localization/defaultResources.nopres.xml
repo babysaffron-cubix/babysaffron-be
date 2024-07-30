@@ -11985,6 +11985,9 @@
   <LocaleResource Name="Admin.Customers.Customers.Fields.Password.Change">
     <Value>Change password</Value>
   </LocaleResource>
+   <LocaleResource Name="Admin.Customers.Customers.Fields.SFDCNumber.Button">
+    <Value>Push to Salesforce</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Customers.Customers.Fields.Password.Hint">
     <Value>The customer's password.</Value>
   </LocaleResource>
