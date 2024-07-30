@@ -1713,9 +1713,9 @@ public partial class CustomerService : ICustomerService
     /// A task that represents the asynchronous operation
     /// the task result contains the result
     /// </returns>
-    public virtual async Task<OtpGeneratorResult> GenerateOtp(string email)
+    public virtual async Task<EmailSendResult> GenerateOtp(string email)
     {
-        var result = new OtpGeneratorResult();
+        var result = new EmailSendResult();
 
         if (string.IsNullOrWhiteSpace(email))
         {
@@ -1741,11 +1741,26 @@ public partial class CustomerService : ICustomerService
     /// A task that represents the asynchronous operation
     /// the task result contains the result
     /// </returns>
-    public virtual async Task SendSupportEmail(SupportEmailRequest supportEmailRequest)
+    public virtual async Task<EmailSendResult> SendSupportEmail(SupportEmailRequest supportEmailRequest)
     {
 
-        await _otpSenderService.SendSupportEmail(supportEmailRequest);
+        return await _otpSenderService.SendSupportEmail(supportEmailRequest);
 
+    }
+
+
+    /// <summary>
+    /// Generate an email for contacting the team
+    /// </summary>
+    /// <param name="email">email on which otp needs to be sent</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation
+    /// the task result contains the result
+    /// </returns>
+    public virtual async Task<EmailSendResult> SendContactUsEmail(ContactUsEmailRequest contactUsEmailRequest)
+    {
+
+        return await _otpSenderService.SendContactUsEmail(contactUsEmailRequest);
     }
 
 
