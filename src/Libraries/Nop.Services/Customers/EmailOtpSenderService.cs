@@ -143,8 +143,8 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
             }
             var client = new SendGridClient(_sendGridApiKey);
-            var to = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
-            var from = new EmailAddress(supportEmailRequest.Email, supportEmailRequest.Email);
+            var from = new EmailAddress(_sendGridSupportContactEmailId, _sendGridSenderName);
+            var to = new EmailAddress(supportEmailRequest.Email, supportEmailRequest.Email);
 
             var dynamicTemplateData = new
             {
@@ -183,7 +183,7 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
             }
            
             var client = new SendGridClient(_sendGridApiKey);
-            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var from = new EmailAddress(_sendGridSupportContactEmailId, _sendGridSenderName);
             var to = new EmailAddress(contactUsEmailRequest.Email, contactUsEmailRequest.FirstName);
 
             var dynamicTemplateData = new
