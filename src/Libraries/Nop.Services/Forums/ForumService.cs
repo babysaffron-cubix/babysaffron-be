@@ -1429,5 +1429,59 @@ public partial class ForumService : IForumService
         return seName;
     }
 
+    public async Task<IList<Forum>> GetAllTestimonialsByGroupNameAsync(string forumGroupName)
+    {
+        var allGroups = await _forumGroupRepository.GetAllAsync(query =>
+        {
+            return from fg in query
+                   orderby fg.DisplayOrder, fg.Id
+                   select fg;
+        });
+
+        var groupId = allGroups.Where(x => x.Name.ToUpper() == forumGroupName.ToUpper()).Select(x=>x.Id).FirstOrDefault();
+
+        if (groupId > 0)
+        {
+
+            var forums = await _forumRepository.GetAllAsync(query =>
+            {
+                return from f in query
+                       orderby f.DisplayOrder, f.Id
+                       where f.ForumGroupId ==groupId
+                       select f;
+            }, cache => cache.PrepareKeyForDefaultCache(NopForumDefaults.ForumByForumGroupCacheKey, forumGroupName));
+
+            return forums;
+        }
+        return null;
+    }
+
+    public async Task SaveTestimonial(Forum forum)
+    {
+        try
+        {
+            string forumGroupName = "Testimonials";
+            var allGroups = await _forumGroupRepository.GetAllAsync(query =>
+            {
+                return from fg in query
+                       orderby fg.DisplayOrder, fg.Id
+                       select fg;
+            });
+
+            var groupId = allGroups.Where(x => x.Name.ToUpper() == forumGroupName.ToUpper()).Select(x => x.Id).FirstOrDefault();
+
+            
+            forum.ForumGroupId = groupId;
+
+            await InsertForumAsync(forum);
+        }
+        catch (Exception ex)
+        {
+            throw ex;
+        }
+
+    }
+
+
     #endregion
 }

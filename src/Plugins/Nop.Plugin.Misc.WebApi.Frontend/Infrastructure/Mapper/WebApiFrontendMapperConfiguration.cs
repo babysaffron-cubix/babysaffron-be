@@ -402,8 +402,10 @@ public partial class WebApiFrontendMapperConfiguration : BaseMapperConfiguration
         //And the CustomerForumSubscriptionsModel class contains the PagerModel field.
         //That's why it's not possible to use Automapper to map CustomerForumSubscriptionsModelDto to CustomerForumSubscriptionsModel
         CreateMap<CustomerForumSubscriptionsModel, CustomerForumSubscriptionsModelDto>();
-
+       
         CreateDtoMap<CustomerForumSubscriptionsModel.ForumSubscriptionModel, ForumSubscriptionModelDto>();
+
+        CreateDtoMap<TestimonialModel, TestimonialsModelDto>();
     }
 
     /// <summary>

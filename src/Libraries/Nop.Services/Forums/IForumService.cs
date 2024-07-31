@@ -531,4 +531,13 @@ public partial interface IForumService
     /// The task result contains the forumTopic SE (search engine) name
     /// </returns>
     Task<string> GetTopicSeNameAsync(ForumTopic forumTopic);
+
+    /// <summary>
+    /// Get testimonials by GroupName
+    /// </summary>
+    /// <param name="forumGroupName">group name</param>
+    /// <returns></returns>
+    Task<IList<Forum>> GetAllTestimonialsByGroupNameAsync(string forumGroupName);
+
+    Task SaveTestimonial(Forum forum);
 }

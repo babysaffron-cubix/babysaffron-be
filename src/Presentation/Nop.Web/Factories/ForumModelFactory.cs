@@ -1030,6 +1030,43 @@ public partial class ForumModelFactory : IForumModelFactory
         return forumModel;
     }
 
+
+    public virtual async Task<List<TestimonialModel>> PrepareTestimonialModelAsync(IList<Forum> forums)
+    {
+        List<TestimonialModel> testimonialModels = new List<TestimonialModel>();
+
+        foreach (Forum forum in forums)
+        {
+            TestimonialModel model = new TestimonialModel()
+            {
+                Id = forum.Id,
+                Name = forum.Name,
+                Description = GetTestimonialDescriptionAndRating(forum.Description, 0),
+                Rating = GetTestimonialDescriptionAndRating(forum.Description, 1)
+            };
+            testimonialModels.Add(model);
+
+        }
+
+        return testimonialModels;
+    }
+
+
+    private string GetTestimonialDescriptionAndRating(string description, int index)
+    {
+        if (!String.IsNullOrEmpty(description))
+        {
+            string[] descArr = description.Split('|');
+            if(descArr.Length == 2)
+            {
+                return descArr[index].Trim();
+            }
+            return descArr[0].Trim();
+        }
+        return string.Empty;
+    }
+
+
     #endregion
 
     #region Nested class

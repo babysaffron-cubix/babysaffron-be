@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
@@ -6,6 +7,7 @@ using Nop.Core.Domain.Forums;
 using Nop.Core.Rss;
 using Nop.Plugin.Misc.WebApi.Framework.Infrastructure.Mapper.Extensions;
 using Nop.Plugin.Misc.WebApi.Frontend.Dto.Boards;
+using Nop.Plugin.Misc.WebApi.Frontend.Dto.Catalog;
 using Nop.Services.Customers;
 using Nop.Services.Forums;
 using Nop.Services.Localization;
@@ -1013,6 +1015,68 @@ public partial class BoardsController : BaseNopWebApiFrontendController
         });
 
         return Ok(new PostVoteResponse { VoteCount = forumPost.VoteCount, IsUp = isUp });
+    }
+
+
+
+    /// <summary>
+    /// Gets a forum group
+    /// </summary>
+    /// <param name="id">The forum group identifier</param>
+    [Authorize]
+    [HttpGet]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(TestimonialsModelDto), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> Testimonials()
+    {
+        if (!_forumSettings.ForumsEnabled)
+            return NotFound($"The setting {nameof(_forumSettings.ForumsEnabled)} is not enabled.");
+
+        string groupName = "Testimonials";
+        var testimonials = await _forumService.GetAllTestimonialsByGroupNameAsync(groupName);
+      
+        var model = await _forumModelFactory.PrepareTestimonialModelAsync(testimonials);
+
+        var modelDto = model.Select(p => p.ToDto<TestimonialsModelDto>()).ToList();
+
+        return Ok(modelDto);
+    }
+
+
+
+    /// <summary>
+    /// Gets a forum group
+    /// </summary>
+    /// <param name="id">The forum group identifier</param>
+    [Authorize]
+    [HttpPost]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(TestimonialsModelDto), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> SaveTestimonials(TestimonialModel testimonialModel)
+    {
+        try
+        {
+            if (!_forumSettings.ForumsEnabled)
+                return NotFound($"The setting {nameof(_forumSettings.ForumsEnabled)} is not enabled.");
+
+
+            Forum forum = new Forum()
+            {
+                Name = testimonialModel.Name,
+                Description = $"{testimonialModel.Description} | {testimonialModel.Rating}",
+                DisplayOrder = 1
+            };
+
+            await _forumService.SaveTestimonial(forum);
+
+            return Ok("Testimonial saved successfully");
+
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+
+        }
     }
 
     #endregion

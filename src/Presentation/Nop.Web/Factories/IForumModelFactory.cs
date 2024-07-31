@@ -190,4 +190,11 @@ public partial interface IForumModelFactory
     /// The task result contains the forum row model
     /// </returns>
     Task<ForumRowModel> PrepareForumRowModelAsync(Forum forum);
+
+    /// <summary>
+    /// prepare testimonial data
+    /// </summary>
+    /// <param name="forums"></param>
+    /// <returns></returns>
+    Task<List<TestimonialModel>> PrepareTestimonialModelAsync(IList<Forum> forums);
 }
