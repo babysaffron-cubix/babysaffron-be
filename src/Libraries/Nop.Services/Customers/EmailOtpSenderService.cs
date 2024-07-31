@@ -7,6 +7,7 @@ using Twilio.Rest.Verify.V2.Service;
 using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using DocumentFormat.OpenXml.Spreadsheet;
+using Nop.Services.Messages;
 
 namespace Nop.Services.Customers;
 
@@ -25,17 +26,20 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
     protected readonly string _sendGridSenderName;
     protected readonly string _sendGridWelcomeEmailTemplateId;
     protected readonly string _sendGridSupportEmailTemplateId;
-    protected readonly string _sendGridSupportContactEmailId;
     protected readonly string _sendGridContactUsEmailTemplateId;
+    protected readonly IEmailAccountService _emailAccountService;
+    protected readonly string _sendGridSupportContactEmailDisplayName;
+
 
     #endregion
 
     #region Ctor
 
-    public EmailOtpSenderService(IOtpGeneratorService otpGeneratorService, IConfiguration configuration)
+    public EmailOtpSenderService(IOtpGeneratorService otpGeneratorService, IConfiguration configuration, IEmailAccountService emailAccountService)
     {
         _otpGeneratorService = otpGeneratorService;
         _configuration = configuration;
+        _emailAccountService = emailAccountService;
 
 
         var builder = new ConfigurationBuilder()
@@ -54,9 +58,16 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
         _sendGridSenderName = _configuration["AppSettings:SendGridSenderName"];
         _sendGridWelcomeEmailTemplateId = _configuration["AppSettings:SendGridWelcomeEmailTemplateId"];
         _sendGridSupportEmailTemplateId = _configuration["AppSettings:SendGridSupportEmailTemplateId"];
-        _sendGridSupportContactEmailId = _configuration["AppSettings:SendGridSupportContactEmailId"];
         _sendGridContactUsEmailTemplateId = _configuration["AppSettings:SendGridContactUsEmailTemplateId"];
+        _sendGridSupportContactEmailDisplayName = _configuration["AppSettings:SendGridSupportContactEmailDisplayName"];
 
+    }
+
+    private async Task<string> GetSupportContactReceiverEmailId()
+    {
+        var allConfigEmails = await _emailAccountService.GetAllEmailAccountsAsync();
+        var supportContactEmailId = allConfigEmails.Where(x => x.DisplayName == _sendGridSupportContactEmailDisplayName).Select(x=>x.Email).FirstOrDefault();
+        return supportContactEmailId;
     }
 
 
@@ -142,9 +153,15 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
                 return emailSendResult;
 
             }
+            var supportContactEmail = await GetSupportContactReceiverEmailId();
+            if (String.IsNullOrEmpty(supportContactEmail))
+            {
+                emailSendResult.AddError("There is no configuration for the support email in admin. Cannot send email");
+                return emailSendResult;
+            }
             var client = new SendGridClient(_sendGridApiKey);
-            var from = new EmailAddress(_sendGridSupportContactEmailId, _sendGridSenderName);
-            var to = new EmailAddress(supportEmailRequest.Email, supportEmailRequest.Email);
+            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var to = new EmailAddress(supportContactEmail, supportContactEmail);
 
             var dynamicTemplateData = new
             {
@@ -181,10 +198,16 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
                 emailSendResult.AddError("Missing details.");
                 return emailSendResult;
             }
-           
+            var supportContactEmail = await GetSupportContactReceiverEmailId();
+            if (String.IsNullOrEmpty(supportContactEmail))
+            {
+                emailSendResult.AddError("There is no configuration for the support email in admin. Cannot send email");
+                return emailSendResult;
+            }
+
             var client = new SendGridClient(_sendGridApiKey);
-            var from = new EmailAddress(_sendGridSupportContactEmailId, _sendGridSenderName);
-            var to = new EmailAddress(contactUsEmailRequest.Email, contactUsEmailRequest.FirstName);
+            var from = new EmailAddress(_sendGridSenderEmailId, _sendGridSenderName);
+            var to = new EmailAddress(supportContactEmail, supportContactEmail);
 
             var dynamicTemplateData = new
             {
