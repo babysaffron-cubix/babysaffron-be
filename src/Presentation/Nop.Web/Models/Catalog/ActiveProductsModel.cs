@@ -18,6 +18,7 @@ public partial record ActiveProductsModel : BaseNopEntityModel
     public string Price { get; set; }
 
     public string Sku { get; set; }
+    public string SEOFriendlyName { get; set; }
     //pictures
     public IList<PictureModel> PictureModels { get; set; }
 }

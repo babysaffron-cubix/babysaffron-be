@@ -12,6 +12,7 @@ using Nop.Core.Domain.Security;
 using Nop.Core.Domain.Seo;
 using Nop.Core.Domain.Shipping;
 using Nop.Core.Domain.Vendors;
+using Nop.Data;
 using Nop.Services.Catalog;
 using Nop.Services.Common;
 using Nop.Services.Customers;
@@ -81,6 +82,7 @@ public partial class ProductModelFactory : IProductModelFactory
     protected readonly ShippingSettings _shippingSettings;
     protected readonly VendorSettings _vendorSettings;
     private static readonly char[] _separator = [','];
+
 
     #endregion
 
@@ -2037,6 +2039,11 @@ public partial class ProductModelFactory : IProductModelFactory
 
             var priceModel = await PrepareProductOverviewPriceModelAsync(product);
             model.Price = priceModel.Price;
+
+            var urlRecord = await _urlRecordService.GetSeNameAsync(product, null, true);
+
+            model.SEOFriendlyName = urlRecord;
+
 
             models.Add(model);
         }

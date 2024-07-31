@@ -369,6 +369,7 @@ public partial class WebApiFrontendMapperConfiguration : BaseMapperConfiguration
         CreateDtoMap<ShoppingCartModel, ShoppingCartModelDto>(entityMappingExpression: map =>
             map.ForMember(m => m.ButtonPaymentMethodViewComponents, options => options.Ignore()));
         CreateDtoMap<MiniShoppingCartModel.ShoppingCartItemModel, MiniShoppingCartModelDto.MiniShoppingCartItemModelDto>();
+        CreateDtoMap<MiniShoppingCartModel.DiscountInfo, MiniShoppingCartModelDto.DiscountInfoDto>();
         CreateDtoMap<OrderTotalsModel, OrderTotalsModelDto>();
         CreateDtoMap<MiniShoppingCartModel, MiniShoppingCartModelDto>();
         CreateDtoMap<ShoppingCartModel.ShoppingCartItemModel, ShoppingCartModelDto.ShoppingCartItemModelDto>();

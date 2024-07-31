@@ -23,5 +23,7 @@ public partial class ActiveProductsModelDto : ModelWithIdDto
     public string Price { get; set; }
 
     public IList<PictureModelDto> PictureModels { get; set; }
+    public string SEOFriendlyName { get; set; }
+
 }
 

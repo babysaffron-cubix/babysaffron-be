@@ -8,6 +8,7 @@ using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Domain.Directory;
+using Nop.Core.Domain.Discounts;
 using Nop.Core.Domain.Media;
 using Nop.Core.Domain.Orders;
 using Nop.Core.Domain.Security;
@@ -37,6 +38,7 @@ using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Common;
 using Nop.Web.Models.Media;
 using Nop.Web.Models.ShoppingCart;
+using static Nop.Web.Models.ShoppingCart.MiniShoppingCartModel;
 
 namespace Nop.Web.Factories;
 
@@ -1077,7 +1079,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
 
                 //subtotal
                 var subTotalIncludingTax = await _workContext.GetTaxDisplayTypeAsync() == TaxDisplayType.IncludingTax && !_taxSettings.ForceTaxExclusionFromOrderSubtotal;
-                var (discountAmountExclTax, _, subTotalWithoutDiscountBase, subTotalWithDiscountExclTax, taxRates) = await _orderTotalCalculationService.GetShoppingCartSubTotalAsync(cart, subTotalIncludingTax);
+                var (discountAmountExclTax, appliedDiscounts, subTotalWithoutDiscountBase, subTotalWithDiscountExclTax, taxRates) = await _orderTotalCalculationService.GetShoppingCartSubTotalAsync(cart, subTotalIncludingTax);
                 var subtotalBase = subTotalWithoutDiscountBase;
                 var currentCurrency = await _workContext.GetWorkingCurrencyAsync();
                 var subtotal = await _currencyService.ConvertFromPrimaryStoreCurrencyAsync(subtotalBase, currentCurrency);
@@ -1151,6 +1153,27 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
                     cartItemModel.ProductSpecificationModel = await PrepareProductSpecificationModelAsync(product);
 
                     model.Items.Add(cartItemModel);
+                }
+
+                model.AppliedDiscountDetails = new List<DiscountInfo>();
+
+                foreach (Discount discount in appliedDiscounts)
+                {
+                    List<Discount> currentDiscount = new List<Discount>() { discount };
+                    DiscountInfo discountInfo = new DiscountInfo()
+                    {
+                        Name = discount.Name,
+                        AdminComment = discount.AdminComment,
+                        DiscountTypeId = discount.DiscountTypeId,
+                        DiscountAmount = discount.DiscountAmount,
+                        DiscountPercentage = discount.DiscountPercentage,
+                        UsePercentage = discount.UsePercentage,
+                        RequiresCouponCode = discount.RequiresCouponCode,
+                        CouponCode = discount.CouponCode
+                    };
+                    _discountService.GetPreferredDiscount(currentDiscount, model.SubTotalValue, out decimal discountAmount);
+                    discountInfo.DiscountAppliedInCart = discountAmount;
+                    model.AppliedDiscountDetails.Add(discountInfo);
                 }
             }
         }
