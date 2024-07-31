@@ -1,4 +1,5 @@
-﻿using Nop.Web.Framework.Models;
+﻿using Nop.Core.Domain.Discounts;
+using Nop.Web.Framework.Models;
 using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Media;
 using static Nop.Web.Models.ShoppingCart.ShoppingCartModel;
@@ -26,6 +27,7 @@ public partial record MiniShoppingCartModel : BaseNopModel
     public DiscountBoxModel DiscountBox { get; set; }
 
     public OrderTotalsModel OrderTotalsModel { get; set; }
+    public List<DiscountInfo> AppliedDiscountDetails { get; set; }
 
     #region Nested Classes
 
@@ -55,6 +57,54 @@ public partial record MiniShoppingCartModel : BaseNopModel
         //specification attributes
         public ProductSpecificationModel ProductSpecificationModel { get; set; }
     }
+
+    public partial record DiscountInfo : BaseNopEntityModel
+    {
+        /// <summary>
+        /// Gets or sets the name
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the admin comment
+        /// </summary>
+        public string AdminComment { get; set; }
+
+        /// <summary>
+        /// Gets or sets the discount type identifier
+        /// </summary>
+        public int DiscountTypeId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to use percentage
+        /// </summary>
+        public bool UsePercentage { get; set; }
+
+        /// <summary>
+        /// Gets or sets the discount percentage
+        /// </summary>
+        public decimal DiscountPercentage { get; set; }
+
+        /// <summary>
+        /// Gets or sets the discount amount
+        /// </summary>
+        public decimal DiscountAmount { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether discount requires coupon code
+        /// </summary>
+        public bool RequiresCouponCode { get; set; }
+
+        /// <summary>
+        /// Gets or sets the coupon code
+        /// </summary>
+        public string CouponCode { get; set; }
+
+        public decimal DiscountAppliedInCart { get; set; }
+
+    }
+
+
 
     #endregion
 }
