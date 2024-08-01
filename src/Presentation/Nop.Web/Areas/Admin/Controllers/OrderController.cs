@@ -877,7 +877,18 @@ public partial class OrderController : BaseAdminController
     [FormValueRequired("sendordertosalesforce")]
     public virtual async Task<IActionResult> SendOrdersToSalesforce(OrderModel orderModel)
     {
-        await _customerModelFactoryWeb.PrepareSalesforceResponseModelForOrders(orderModel.Id);
+        var salesforceResponse = await _customerModelFactoryWeb.PrepareSalesforceResponseModelForOrders(orderModel.Id);
+        if (salesforceResponse.CalloutErrorResult == false)
+        {
+            _notificationService.SuccessNotification($"Salesforce {salesforceResponse.ResultMsg}");
+
+        }
+        else
+        {
+            _notificationService.SuccessNotification(salesforceResponse.ResultMsg);
+
+        }
+
         return RedirectToAction("Edit", new { id = orderModel.Id });
     }
 
