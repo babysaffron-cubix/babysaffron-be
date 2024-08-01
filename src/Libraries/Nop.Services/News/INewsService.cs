@@ -65,6 +65,12 @@ public partial interface INewsService
     /// <returns>Result</returns>
     bool IsNewsAvailable(NewsItem newsItem, DateTime? dateTime = null);
 
+    /// <summary>
+    /// Get all active news
+    /// </summary>
+    /// <returns></returns>
+    Task<IList<NewsItem>> GetAllNewsAsync();
+
     #endregion
 
     #region News comments

@@ -215,5 +215,32 @@ public partial class NewsController : BaseNopWebApiFrontendController
         return Ok();
     }
 
+
+
+    [HttpGet]
+    [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(List<NewsItemModelDto>), StatusCodes.Status200OK)]
+    public virtual async Task<IActionResult> GetAllNewsItem()
+    {
+        if (!_newsSettings.Enabled)
+            return BadRequest($"The setting {nameof(_newsSettings.Enabled)} is not enabled");
+
+        var newsItems = await _newsService.GetAllNewsAsync();
+        if (newsItems == null || newsItems.Count() == 0)
+            return NotFound($"News not found");
+
+
+        List<NewsItemModel> newsItemModels = new List<NewsItemModel>();
+        foreach (NewsItem item in newsItems)
+        {
+            var model = await _newsModelFactory.PrepareNewsItemModelAsync(new NewsItemModel(), item, true);
+            newsItemModels.Add(model);
+        }
+
+        var modelDto = newsItemModels.Select(p => p.ToDto<NewsItemModelDto>()).ToList();
+
+        return Ok(modelDto);
+    }
     #endregion
 }
