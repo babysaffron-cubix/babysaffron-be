@@ -203,4 +203,12 @@ public partial interface ICustomerModelFactory
     /// <param name="addressId"></param>
     /// <returns></returns>
     Task<SalesforceContactUpsertResponse> PrepareSalesforceResponseModelForCustomer(int customerId, int? addressId = null);
+
+    /// <summary>
+    /// for preparing the model for salesforce order creaion and making the call
+    /// </summary>
+    /// <param name="orderId"></param>
+    /// <returns></returns>
+    Task<SalesforceOrderResponse> PrepareSalesforceResponseModelForOrders(int orderId);
+    
 }

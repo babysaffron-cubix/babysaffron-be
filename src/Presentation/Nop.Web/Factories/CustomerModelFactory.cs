@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Primitives;
@@ -33,6 +34,7 @@ using Nop.Services.Orders;
 using Nop.Services.Security;
 using Nop.Services.Seo;
 using Nop.Services.Stores;
+using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Common;
 using Nop.Web.Models.Customer;
 
@@ -85,9 +87,13 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     protected readonly IAddressService _addressService;
     protected readonly ISalesforceCommonService _salesforceCommonService;
     protected readonly VendorSettings _vendorSettings;
+    private readonly IProductModelFactory _productModelFactory;
+
 
     private static readonly char[] _separator = [','];
-     
+    private static readonly string _weightAttributeName = "Weight";
+
+
     #endregion
 
     #region Ctor
@@ -131,7 +137,8 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         TaxSettings taxSettings,
         VendorSettings vendorSettings,
         IAddressService addressService,
-        ISalesforceCommonService salesforceCommonService)
+        ISalesforceCommonService salesforceCommonService,
+        IProductModelFactory productModelFactory)
     {
         _addressSettings = addressSettings;
         _captchaSettings = captchaSettings;
@@ -173,6 +180,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         _vendorSettings = vendorSettings;
         _addressService = addressService;
         _salesforceCommonService = salesforceCommonService;
+        _productModelFactory = productModelFactory;
     }
 
     #endregion
@@ -1349,6 +1357,245 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         return attributesXml;
     }
 
+
+
+    public async Task<SalesforceOrderResponse> PrepareSalesforceResponseModelForOrders(int orderId)
+    {
+        var order = await _orderService.GetOrderByIdAsync(orderId);
+        SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
+        SalesforceOrderRequest salesforceOrderRequest = new SalesforceOrderRequest();
+        if (order != null)
+        {
+            var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
+            if (!String.IsNullOrEmpty(customer.CustomCustomerAttributesXML))
+            {
+                int[] productIds;
+                var orderDetails = await _orderService.GetOrderItemsAsync(order.Id);
+
+                productIds = orderDetails.Select(x => x.ProductId).ToArray();
+
+                var products = await _productService.GetProductsByIdsAsync(productIds);
+                // get model contains all details related to each product in the current order
+                var productOverviewModels = (await _productModelFactory.PrepareProductOverviewModelsAsync(products, true, true, null, true, false)).ToList();
+
+
+                int billingAddressId = order.BillingAddressId;
+                int shippingAddressId = (int)(order.ShippingAddressId != null ? order.ShippingAddressId : billingAddressId);
+
+                // get address mode information for billing and shipping address
+                var addresses = await PrepareAddressModelByAddressIdsAsync(new List<int> { billingAddressId, shippingAddressId });
+
+                SalesforceOrderComponents salesforceOrderComponents = new SalesforceOrderComponents();
+
+                if (addresses.Addresses.Count() == 2)
+                {
+                    var billingAddress = addresses.Addresses[0];
+                    salesforceOrderComponents.BillingAddress = await GetSalesforceAddressMapper(billingAddress);
+
+                    var shippingAddress = addresses.Addresses[1];
+                    salesforceOrderComponents.ShippingAddress = await GetSalesforceAddressMapper(shippingAddress);
+                }
+
+                salesforceOrderComponents.Ord = await GetSalesforceOrderMapper(order, customer.CustomCustomerAttributesXML);
+
+                PopulateOrderDetails(orderDetails, productOverviewModels, salesforceOrderComponents, order);
+                salesforceOrderRequest.OrderWrapper = salesforceOrderComponents;
+
+                #region MakeApiCall
+
+                var contactJsonString = JsonSerializer.Serialize(salesforceOrderRequest);
+                string endpoint = "apexrest/Web2SFDCorder";
+                var responseContent = await _salesforceCommonService.SalesforceAPICallHandler(endpoint, contactJsonString);
+
+                if (responseContent != null)
+                {
+
+                    JObject json = JObject.Parse(responseContent);
+                    string SFDCNumber = json["SFDCNumber"]?.ToString();
+                    salesforceOrderResponse.SFDCNumber = SFDCNumber;
+                    salesforceOrderResponse.SFDCRecordId = json["SFDCRecordId"]?.ToString();
+                    salesforceOrderResponse.ResultMsg = json["ResultMsg"]?.ToString();
+                    salesforceOrderResponse.CalloutErrorResult = Convert.ToBoolean(json["CalloutErrorResult"]);
+
+                    if (!String.IsNullOrEmpty(SFDCNumber))
+                    {
+                        order.AuthorizationTransactionCode = SFDCNumber;
+                        await _orderService.UpdateOrderAsync(order);
+                    }
+
+                }
+
+                #endregion
+            }
+
+        }
+        return salesforceOrderResponse;
+    }
+
+
+    /// <summary>
+    /// Get order details in salesforce format for the current order
+    /// </summary>
+    /// <param name="orderDetails"></param>
+    /// <param name="productOverviewModel"></param>
+    /// <param name="salesforceOrderComponents"></param>
+    /// <param name="order"></param>
+    private void PopulateOrderDetails(IList<OrderItem> orderDetails, List<ProductOverviewModel> productOverviewModel, SalesforceOrderComponents salesforceOrderComponents, Order order)
+    {
+        if (orderDetails != null)
+        {
+            salesforceOrderComponents.OrdLine = new List<SalesforceOrderLine>();
+            foreach (OrderItem item in orderDetails)
+            {
+                var currentProduct = productOverviewModel.Where(x => x.Id == item.ProductId).FirstOrDefault();
+
+                var weightValue = GetWeightValue(currentProduct);
+
+                salesforceOrderComponents.OrdLine.Add(new SalesforceOrderLine()
+                {
+                    OrderId = order.Id.ToString(),
+                    ProductId = currentProduct.Sku,
+                    ProductName = currentProduct.Name,
+                    WeightInGram = weightValue,
+                    Quantity = item.Quantity,
+                    ProductPrice = item.UnitPriceExclTax,
+                    DiscountPercentage = 0,
+                    DiscountAmount = 0,
+                    OliTotal = item.PriceExclTax,
+                    ProductCurrency = order.CustomerCurrencyCode
+                });
+            }
+        }
+    }
+
+
+    /// <summary>
+    /// Get weight value for a product
+    /// </summary>
+    /// <param name="productOverviewModel"></param>
+    /// <returns></returns>
+    private decimal? GetWeightValue(ProductOverviewModel productOverviewModel)
+    {
+        try
+        {
+            var weightString = productOverviewModel.ProductSpecificationModel.Groups.SelectMany(x => x.Attributes)
+                               .Where(attr => attr.Name == _weightAttributeName)
+                               .Select(attr => attr.Values.FirstOrDefault()?.ValueRaw)
+                               .Where(val => val != null).FirstOrDefault();
+            var weightValue = ExtractWeightValue(weightString);
+            return weightValue;
+        }
+
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+
+
+
+    /// <summary>
+    /// Get Weight values from the attribute xml
+    /// </summary>
+    /// <param name="input"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException"></exception>
+    private static decimal ExtractWeightValue(string input)
+    {
+        // Regular expression to match one or more digits at the beginning of the string
+        var match = Regex.Match(input, @"^\d+");
+
+        if (match.Success)
+        {
+            decimal weightValue = 0;
+            Decimal.TryParse(match.Value, out weightValue);
+            return weightValue;
+        }
+        else
+        {
+            throw new ArgumentException("No numeric value found in the input string.");
+        }
+    }
+
+
+
+
+
+    /// <summary>
+    /// Customer address mapper 
+    /// </summary>
+    /// <param name="addressModel"></param>
+    /// <returns></returns>
+    private async Task<SalesforceAddress> GetSalesforceAddressMapper(AddressModel addressModel)
+    {
+        try
+        {
+            return new SalesforceAddress()
+            {
+                Street = addressModel.Address1,
+                Street2 = addressModel.Address2,
+                State = addressModel.StateProvinceName,
+                PostalCode = addressModel.ZipPostalCode,
+                PhoneNo = addressModel.PhoneNumber,
+                Name = $"{addressModel.FirstName} {addressModel.LastName}",
+                Country = addressModel.CountryName,
+                City = addressModel.City,
+                AddressSaveAs = !String.IsNullOrEmpty(addressModel.FormattedCustomAddressAttributes) ? await GetAddressType(addressModel.FormattedCustomAddressAttributes) : null
+            };
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
+
+
+    /// <summary>
+    /// Get addressType attribute for the current customer address
+    /// </summary>
+    /// <param name="customAttributesXML"></param>
+    /// <returns></returns>
+    private async Task<string> GetAddressType(String customAttributesXML)
+    {
+        return await Task.Run(() =>
+        {
+
+            return customAttributesXML.Split(":")[1].Trim();
+
+        });
+    }
+
+
+
+    /// <summary>
+    /// Salesforce order Mapper
+    /// </summary>
+    /// <param name="order"></param>
+    /// <param name="customCustomerAttributeXML"></param>
+    /// <returns></returns>
+    private async Task<SalesforceOrder> GetSalesforceOrderMapper(Order order, string customCustomerAttributeXML)
+    {
+        try
+        {
+            return new SalesforceOrder()
+            {
+                UserId = !String.IsNullOrEmpty(customCustomerAttributeXML) ? await GetSFDCNumber(customCustomerAttributeXML) : null,
+                Transactionid = order.CardName, //we are saving razorpay paymentid in this col
+                OrderTotal = order.OrderSubtotalExclTax,
+                OrderStatus = "Booked",
+                OrderNumber = order.Id.ToString(),
+                OrderDate = order.CreatedOnUtc.ToString("yyyy-MM-dd"),
+                OrderCurrency = order.CustomerCurrencyCode,
+                DiscountPercent = 0 //TODO: calculate this
+
+            };
+        }
+        catch (Exception ex)
+        {
+            throw;
+        }
+    }
 
     #endregion
 }
