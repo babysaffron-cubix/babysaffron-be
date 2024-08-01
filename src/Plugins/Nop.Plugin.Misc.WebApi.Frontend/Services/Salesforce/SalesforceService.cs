@@ -20,6 +20,7 @@ using Microsoft.AspNetCore.Http;
 using Nop.Web.Models.Common;
 using Nop.Web.Models.Catalog;
 
+
 namespace Nop.Plugin.Misc.WebApi.Frontend.Services;
 
 public class SalesforceService : ISalesforceService
@@ -76,75 +77,14 @@ public class SalesforceService : ISalesforceService
     /// <returns></returns>
     public async Task<SalesforceOrderResponse> CreateSalesforceOrder(int orderId)
     {
-        var order = await _orderService.GetOrderByIdAsync(orderId);
-        SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
-        SalesforceOrderRequest salesforceOrderRequest = new SalesforceOrderRequest();
-        if (order != null)
+        try
         {
-            var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
-            if (!String.IsNullOrEmpty(customer.CustomCustomerAttributesXML))
-            {
-                int[] productIds;
-                var orderDetails = await _orderService.GetOrderItemsAsync(order.Id);
-
-                productIds = orderDetails.Select(x => x.ProductId).ToArray();
-
-                var products = await _productService.GetProductsByIdsAsync(productIds);
-                // get model contains all details related to each product in the current order
-                var productOverviewModels = (await _productModelFactory.PrepareProductOverviewModelsAsync(products, true, true, null, true, false)).ToList();
-
-
-                int billingAddressId = order.BillingAddressId;
-                int shippingAddressId = (int)(order.ShippingAddressId != null ? order.ShippingAddressId : billingAddressId);
-
-                // get address mode information for billing and shipping address
-                var addresses = await _customerModelFactory.PrepareAddressModelByAddressIdsAsync(new List<int> { billingAddressId, shippingAddressId });
-
-                SalesforceOrderComponents salesforceOrderComponents = new SalesforceOrderComponents();
-
-                if (addresses.Addresses.Count() == 2)
-                {
-                    var billingAddress = addresses.Addresses[0];
-                    salesforceOrderComponents.BillingAddress = await GetSalesforceAddressMapper(billingAddress);
-
-                    var shippingAddress = addresses.Addresses[1];
-                    salesforceOrderComponents.ShippingAddress = await GetSalesforceAddressMapper(shippingAddress);
-                }
-
-                salesforceOrderComponents.Ord = await GetSalesforceOrderMapper(order, customer.CustomCustomerAttributesXML);
-
-                PopulateOrderDetails(orderDetails, productOverviewModels, salesforceOrderComponents, order);
-                salesforceOrderRequest.OrderWrapper = salesforceOrderComponents;
-
-                #region MakeApiCall
-
-                var contactJsonString = JsonSerializer.Serialize(salesforceOrderRequest);
-                string endpoint = "apexrest/Web2SFDCorder";
-                var responseContent = await _salesforceCommonService.SalesforceAPICallHandler(endpoint, contactJsonString);
-
-                if (responseContent != null)
-                {
-
-                    JObject json = JObject.Parse(responseContent);
-                    string SFDCNumber  = json["SFDCNumber"]?.ToString();
-                    salesforceOrderResponse.SFDCNumber = SFDCNumber;
-                    salesforceOrderResponse.SFDCRecordId = json["SFDCRecordId"]?.ToString();
-                    salesforceOrderResponse.ResultMsg = json["ResultMsg"]?.ToString();
-                    salesforceOrderResponse.CalloutErrorResult = Convert.ToBoolean(json["CalloutErrorResult"]);
-
-                    if (!String.IsNullOrEmpty(SFDCNumber))
-                    {
-                        order.AuthorizationTransactionCode = SFDCNumber;
-                        await _orderService.UpdateOrderAsync(order);
-                    }
-
-                }
-
-                #endregion
-            }
-
+            return await _customerModelFactory.PrepareSalesforceResponseModelForOrders(orderId);
         }
-        return salesforceOrderResponse;
+        catch (Exception ex)
+        {
+            throw ex;
+        }
     }
 
 
@@ -170,96 +110,7 @@ public class SalesforceService : ISalesforceService
         {
             throw;
         }
-        //try
-        //{
-        //    var customer = await _customerService.GetCustomerByIdAsync(customerId);
-        //    SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
-        //if (customer != null)
-        //{
-
-        //    int addressIdForSalesforce = addressId != null ? Convert.ToInt32(addressId) : (customer.BillingAddressId != null ? Convert.ToInt32(customer.BillingAddressId) : (customer.ShippingAddressId != null ? Convert.ToInt32(customer.ShippingAddressId) : 0));
-        //    var addresses = addressId > 0 ? await _customerModelFactory.PrepareCustomerAddressModelByCustomerIdAsync(customerId) : null;
-
-        //    var address = (addresses != null && addresses.Addresses != null &&  addresses.Addresses.Count() > 0) ? addresses.Addresses[0] : null;
-
-        //        // there is a possibility that the customer has just registered with email and does not have a first, last name.
-        //        // in this case, fetch the first, last name from the address and use it to updated the customer. Later this updated detail will be send to salesforce
-        //        if (customer.FirstName == null || customer.LastName == null)
-        //        {
-        //            customer.FirstName = address.FirstName;
-        //            customer.LastName = address.LastName;
-
-        //            await _customerService.UpdateCustomerAsync(customer);
-        //        }
-
-        //        //get sfdc contact number, which might have been saved the last time in the db
-        //        string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
-
-        //    SalesforceContactUpsertRequest salesforceContactUpsertRequest = new SalesforceContactUpsertRequest() { Contacts = new List<SalesforceContacts>() };
-
-        //    SalesforceContacts salesforceContacts = new SalesforceContacts()
-        //    {
-        //        FirstName = customer.FirstName,
-        //        LastName = customer.LastName,
-        //        EmailId = customer.Email,
-        //        Mobile = customer.Phone,
-        //        State = address != null ? address.StateProvinceName : null,
-        //        City = address != null ? address.City : null,
-        //        Address = address != null ? address.Address1 : null,
-        //        Pincode = address != null ? address.ZipPostalCode : null,
-        //        Country = address != null ? address.CountryName : null,
-        //        Gender = customer.Gender,
-        //        OAuthProvider = "Google",
-        //        SFDCContactNumber = sfdcContactNumber
-        //    };
-        //    salesforceContactUpsertRequest.Contacts.Add(salesforceContacts);
-
-
-        //    #region MakeAPICall
-
-
-        //    var contactJsonString = JsonSerializer.Serialize(salesforceContactUpsertRequest);
-        //    string endpoint = "apexrest/Web2SFDCcontactUpsert";
-        //    var responseContent = await _salesforceCommonService.SalesforceAPICallHandler(endpoint, contactJsonString);
-
-        //    if(responseContent != null)
-        //    {
-        //        var jsonToken = JToken.Parse(responseContent);
-        //        JArray jsonArray = (JArray)jsonToken;
-        //        foreach (JObject json in jsonArray)
-        //        {
-        //            string sfdcNumber = json["SFDCNumber"]?.ToString();
-        //            salesforceOrderResponse.SFDCNumber = sfdcNumber;
-        //            salesforceOrderResponse.SFDCRecordId = json["SFDCRecordId"]?.ToString();
-        //            salesforceOrderResponse.ResultMsg = json["ResultMsg"]?.ToString();
-        //            salesforceOrderResponse.CalloutErrorResult = Convert.ToBoolean(json["CalloutErrorResult"]);
-
-        //            if (sfdcNumber != null)
-        //            {
-        //                IDictionary<string, string> form = new Dictionary<string, string>();
-        //                form.Add("customer_attribute_1", sfdcNumber);
-        //                var updatedCustomCustomerAttributeXML = await ParseCustomCustomerAttributesAsync(form);
-        //                customer.CustomCustomerAttributesXML = updatedCustomCustomerAttributeXML;
-        //                await _customerService.UpdateCustomerAsync(customer);
-        //            }
-        //        }
-        //    }
-        //    #endregion
-
-
-
-        //}
-
-
-        //SalesforceContactUpsertResponse salesforceContactUpsertResponse = new SalesforceContactUpsertResponse() { SalesforceResponse = new List<SalesforceOrderResponse>() };
-        //salesforceContactUpsertResponse.SalesforceResponse.Add(salesforceOrderResponse);
-        //return salesforceContactUpsertResponse;
-
-        //}
-        //catch (Exception ex)
-        //{
-        //    throw ex;
-        //}
+      
     }
 
 

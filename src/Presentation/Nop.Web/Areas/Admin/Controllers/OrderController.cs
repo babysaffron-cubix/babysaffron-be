@@ -22,11 +22,13 @@ using Nop.Services.Security;
 using Nop.Services.Shipping;
 using Nop.Web.Areas.Admin.Factories;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
+using Nop.Web.Areas.Admin.Models.Customers;
 using Nop.Web.Areas.Admin.Models.Orders;
 using Nop.Web.Areas.Admin.Models.Reports;
 using Nop.Web.Framework.Controllers;
 using Nop.Web.Framework.Mvc;
 using Nop.Web.Framework.Mvc.Filters;
+using Nop.Web.Factories;
 
 namespace Nop.Web.Areas.Admin.Controllers;
 
@@ -46,7 +48,7 @@ public partial class OrderController : BaseAdminController
     protected readonly IImportManager _importManager;
     protected readonly ILocalizationService _localizationService;
     protected readonly INotificationService _notificationService;
-    protected readonly IOrderModelFactory _orderModelFactory;
+    protected readonly Web.Areas.Admin.Factories.IOrderModelFactory _orderModelFactory;
     protected readonly IOrderProcessingService _orderProcessingService;
     protected readonly IOrderService _orderService;
     protected readonly IPaymentService _paymentService;
@@ -64,6 +66,7 @@ public partial class OrderController : BaseAdminController
     protected readonly IWorkContext _workContext;
     protected readonly IWorkflowMessageService _workflowMessageService;
     protected readonly OrderSettings _orderSettings;
+    protected readonly Web.Factories.ICustomerModelFactory _customerModelFactoryWeb;
     private static readonly char[] _separator = [','];
 
     #endregion
@@ -82,7 +85,7 @@ public partial class OrderController : BaseAdminController
         IImportManager importManager,
         ILocalizationService localizationService,
         INotificationService notificationService,
-        IOrderModelFactory orderModelFactory,
+        Web.Areas.Admin.Factories.IOrderModelFactory orderModelFactory,
         IOrderProcessingService orderProcessingService,
         IOrderService orderService,
         IPaymentService paymentService,
@@ -99,7 +102,8 @@ public partial class OrderController : BaseAdminController
         IStoreContext storeContext,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
-        OrderSettings orderSettings)
+        OrderSettings orderSettings,
+        Web.Factories.ICustomerModelFactory customerModelFactoryWeb)
     {
         _addressService = addressService;
         _addressAttributeParser = addressAttributeParser;
@@ -131,6 +135,7 @@ public partial class OrderController : BaseAdminController
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
         _orderSettings = orderSettings;
+        _customerModelFactoryWeb = customerModelFactoryWeb;
     }
 
     #endregion
@@ -864,6 +869,16 @@ public partial class OrderController : BaseAdminController
             await _notificationService.ErrorNotificationAsync(exc);
             return View(model);
         }
+    }
+
+
+
+    [HttpPost, ActionName("Edit")]
+    [FormValueRequired("sendordertosalesforce")]
+    public virtual async Task<IActionResult> SendOrdersToSalesforce(OrderModel orderModel)
+    {
+        await _customerModelFactoryWeb.PrepareSalesforceResponseModelForOrders(orderModel.Id);
+        return RedirectToAction("Edit", new { id = orderModel.Id });
     }
 
     #endregion

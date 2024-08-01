@@ -1758,7 +1758,7 @@ public partial class CustomerController : BaseAdminController
 
 
     [HttpPost, ActionName("Edit")]
-    [FormValueRequired("sandtosalesforce")]
+    [FormValueRequired("sendtosalesforce")]
     public virtual async Task<IActionResult> SendToSalesforce(CustomerModel model)
     {
         await _customerModelFactoryWeb.PrepareSalesforceResponseModelForCustomer(model.Id);

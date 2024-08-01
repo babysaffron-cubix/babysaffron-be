@@ -13149,6 +13149,9 @@
   <LocaleResource Name="Admin.Orders.Fields.OrderStatus.Cancel">
     <Value>Cancel order</Value>
   </LocaleResource>
+   <LocaleResource Name="Admin.Orders.Button.Pushtosalesforce">
+    <Value>Push To Salesforce</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Orders.Fields.OrderStatus.CancelledNotification">
     <Value>This order is cancelled</Value>
   </LocaleResource>
