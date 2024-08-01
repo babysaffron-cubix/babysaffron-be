@@ -146,6 +146,23 @@ public partial class NewsService : INewsService
 
         return true;
     }
+
+
+    /// <summary>
+    /// Get all active news
+    /// </summary>
+    /// <returns></returns>
+    public virtual async Task<IList<NewsItem>> GetAllNewsAsync()
+    {
+        var news = await _newsItemRepository.GetAllAsync(async query =>
+        {
+            query = query.Where(x => x.Published);
+            return query.OrderByDescending(n => n.StartDateUtc ?? n.CreatedOnUtc);
+        });
+
+        return news;
+    }
+
     #endregion
 
     #region News comments

@@ -176,7 +176,14 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
             var response = await client.SendEmailAsync(msg);
 
-            emailSendResult.Message = "Suport email sent.";
+            if (response.IsSuccessStatusCode == true)
+            {
+                emailSendResult.Message = "ContactUs email sent.";
+            }
+            else
+            {
+                emailSendResult.AddError("Unable to send email. Please try again later");
+            }
             return emailSendResult;
 
         }
@@ -227,7 +234,15 @@ public partial class EmailOtpSenderService : OtpGeneratorService, IOtpSenderServ
 
             var response = await client.SendEmailAsync(msg);
 
-            emailSendResult.Message = "ContactUs email sent.";
+            if (response.IsSuccessStatusCode == true)
+            {
+                emailSendResult.Message = "ContactUs email sent.";
+            }
+            else
+            {
+                emailSendResult.AddError("Unable to send email. Please try again later");
+            }
+
             return emailSendResult;
 
         }
