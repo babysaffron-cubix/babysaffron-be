@@ -1545,18 +1545,18 @@ public partial class OrderProcessingService : IOrderProcessingService
         try
         {
 
-
             if (order != null && !String.IsNullOrEmpty(razorpayPaymentSaveRequest.RazorpayPaymentId))
             {
-                // update order Payment Status to paid and order status to complete
+                // update order Payment Status to paid and order status to Processing, it will be marked Complete from Admin panel
                 order.PaymentStatusId = (int)PaymentStatus.Paid;
                 order.PaymentMethodSystemName = "RazorPay";
-                order.OrderStatusId = (int)OrderStatus.Complete;
+                order.OrderStatusId = (int)OrderStatus.Processing;
                 order.CardName = razorpayPaymentSaveRequest.RazorpayPaymentId;
                 await _orderService.UpdateOrderAsync(order);
                 placeOrderResult.PlacedOrder = order;
 
             }
+            // this means that the payment is not successful
             else
             {
                 // mark order status as Cancelled

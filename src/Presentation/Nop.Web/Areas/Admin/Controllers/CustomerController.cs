@@ -1761,8 +1761,19 @@ public partial class CustomerController : BaseAdminController
     [FormValueRequired("sendtosalesforce")]
     public virtual async Task<IActionResult> SendToSalesforce(CustomerModel model)
     {
-        await _customerModelFactoryWeb.PrepareSalesforceResponseModelForCustomer(model.Id);
-        //modelawait _salesforceCommonService.
+       var salesforceResponse =  await _customerModelFactoryWeb.PrepareSalesforceResponseModelForCustomer(model.Id);
+        if (salesforceResponse.SalesforceResponse[0].CalloutErrorResult == false)
+        {
+            _notificationService.SuccessNotification($"Salesforce {salesforceResponse.SalesforceResponse[0].ResultMsg}");
+
+        }
+        else
+        {
+            _notificationService.SuccessNotification(salesforceResponse.SalesforceResponse[0].ResultMsg);
+
+        }
+
+
         return RedirectToAction("Edit", new { id = model.Id });
     }
     }
