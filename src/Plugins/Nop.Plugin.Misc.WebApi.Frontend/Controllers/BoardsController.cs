@@ -1023,7 +1023,6 @@ public partial class BoardsController : BaseNopWebApiFrontendController
     /// Gets a forum group
     /// </summary>
     /// <param name="id">The forum group identifier</param>
-    [Authorize]
     [HttpGet]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(TestimonialsModelDto), StatusCodes.Status200OK)]
@@ -1048,7 +1047,6 @@ public partial class BoardsController : BaseNopWebApiFrontendController
     /// Gets a forum group
     /// </summary>
     /// <param name="id">The forum group identifier</param>
-    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(TestimonialsModelDto), StatusCodes.Status200OK)]
