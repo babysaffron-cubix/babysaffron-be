@@ -20,6 +20,7 @@ using Nop.Services.Catalog;
 using Nop.Services.Cms;
 using Nop.Services.Common;
 using Nop.Services.Common.Salesforce;
+using Nop.Services.Common.Whatsapp;
 using Nop.Services.Configuration;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
@@ -268,7 +269,9 @@ public partial class NopStartup : INopStartup
         services.AddSingleton<IOtpValidationService, OtpValidationService>();
         services.AddScoped<IRazorpayPaymentService, RazorpayPaymentService>();
         services.AddScoped<ISalesforceCommonService, SalesforceCommonService>();
-        
+        services.AddScoped<IWhatsappService, WhatsappService>();
+
+
 
         services.AddHttpClient();
 

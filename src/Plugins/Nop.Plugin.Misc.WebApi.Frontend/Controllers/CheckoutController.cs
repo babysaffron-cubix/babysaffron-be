@@ -18,6 +18,7 @@ using Nop.Plugin.Misc.WebApi.Frontend.Dto.ShoppingCart;
 using Nop.Plugin.Misc.WebApi.Frontend.Services;
 using Nop.Services.Attributes;
 using Nop.Services.Common;
+using Nop.Services.Common.Whatsapp;
 using Nop.Services.Customers;
 using Nop.Services.Directory;
 using Nop.Services.Localization;
@@ -27,6 +28,7 @@ using Nop.Services.Shipping;
 using Nop.Services.Tax;
 using Nop.Web.Areas.Admin.Infrastructure.Mapper.Extensions;
 using Nop.Web.Factories;
+using Nop.Web.Models.Catalog;
 using Nop.Web.Models.Checkout;
 using Nop.Web.Models.Common;
 using Nop.Web.Models.ShoppingCart;
@@ -65,6 +67,8 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
     protected readonly ShippingSettings _shippingSettings;
     protected readonly TaxSettings _taxSettings;
     protected readonly ISalesforceService _salesforceService;
+    protected readonly IWhatsappService _whatsappService;
+    protected readonly ICustomerModelFactory _customerModelFactory;
 
     private static readonly string[] _separator = ["___"];
 
@@ -98,7 +102,9 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         RewardPointsSettings rewardPointsSettings,
         ShippingSettings shippingSettings,
         TaxSettings taxSettings,
-        ISalesforceService salesforceService
+        ISalesforceService salesforceService,
+        IWhatsappService whatsappService,
+        ICustomerModelFactory customerModelFactory
     )
     {
         _addressSettings = addressSettings;
@@ -128,6 +134,8 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         _shippingSettings = shippingSettings;
         _taxSettings = taxSettings;
         _salesforceService = salesforceService;
+        _whatsappService = whatsappService;
+        _customerModelFactory = customerModelFactory;
     }
 
     #endregion
@@ -1301,6 +1309,22 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
             var response = await _orderProcessingService.UpdateOrderStatus(razorpayPaymentSaveRequest);
             await _salesforceService.CreateSalesforceOrder(razorpayPaymentSaveRequest.BabySaffronOrderId);
 
+            var order = await _orderService.GetOrderByIdAsync(razorpayPaymentSaveRequest.BabySaffronOrderId);
+            if (order != null)
+            {
+                var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
+
+                WhatsappEmailRequest whatsappEmailRequest = new WhatsappEmailRequest()
+                {
+                    Name = $"{customer.FirstName} {customer.LastName}",
+                    OrderId = razorpayPaymentSaveRequest.BabySaffronOrderId,
+                    OrderAmount = $"{order.OrderSubtotalExclTax} {order.CustomerCurrencyCode}",
+                    Weight = (await _customerModelFactory.GetTotalWeightOfAnOrder(order.Id)).ToString()
+
+                };
+
+                await _whatsappService.SendOrderConfirmationOnWhatsapp(customer.Phone, whatsappEmailRequest);
+            }
             return Ok(response);
         }
         catch (Exception ex)
@@ -1339,6 +1363,9 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
 
         return Ok(model.ToDto<CheckoutCompletedModelDto>());
     }
+
+
+   
 
     #endregion
 

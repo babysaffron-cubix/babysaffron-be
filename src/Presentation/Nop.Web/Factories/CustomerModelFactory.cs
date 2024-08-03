@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Irony.Parsing;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json.Linq;
@@ -1606,6 +1607,28 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         {
             throw;
         }
+    }
+
+    public async Task<decimal> GetTotalWeightOfAnOrder(int orderId)
+    {
+        decimal totalWeight=0;
+        var orderDetails = await _orderService.GetOrderItemsAsync(orderId);
+
+        var productIds = orderDetails.Select(x => x.ProductId).ToArray();
+
+        var products = await _productService.GetProductsByIdsAsync(productIds);
+        // get model contains all details related to each product in the current order
+        var productOverviewModels = (await _productModelFactory.PrepareProductOverviewModelsAsync(products, true, true, null, true, false)).ToList();
+
+        foreach (OrderItem item in orderDetails)
+        {
+            var currentProduct = productOverviewModels.Where(x => x.Id == item.ProductId).FirstOrDefault();
+
+            var weightValue = GetWeightValue(currentProduct);
+            totalWeight += weightValue!= null ? Convert.ToDecimal(weightValue) : 0;
+        }
+
+        return totalWeight;
     }
 
     #endregion

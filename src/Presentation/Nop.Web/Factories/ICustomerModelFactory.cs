@@ -210,5 +210,9 @@ public partial interface ICustomerModelFactory
     /// <param name="orderId"></param>
     /// <returns></returns>
     Task<SalesforceResponse> PrepareSalesforceResponseModelForOrders(int orderId);
-    
+
+
+    Task<decimal> GetTotalWeightOfAnOrder(int orderId);
+
+
 }
