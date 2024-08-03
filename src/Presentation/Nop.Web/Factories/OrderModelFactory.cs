@@ -210,7 +210,7 @@ public partial class OrderModelFactory : IOrderModelFactory
             var orderModel = new CustomerOrderListModel.OrderDetailsModel
             {
                 Id = order.Id,
-                CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(order.CreatedOnUtc, DateTimeKind.Utc),
+                CreatedOn = order.CreatedOnUtc,
                 OrderStatusEnum = order.OrderStatus,
                 OrderStatus = await _localizationService.GetLocalizedEnumAsync(order.OrderStatus),
                 PaymentStatus = await _localizationService.GetLocalizedEnumAsync(order.PaymentStatus),

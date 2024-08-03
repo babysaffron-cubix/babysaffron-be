@@ -75,7 +75,7 @@ public class SalesforceService : ISalesforceService
     /// </summary>
     /// <param name="orderId"></param>
     /// <returns></returns>
-    public async Task<SalesforceOrderResponse> CreateSalesforceOrder(int orderId)
+    public async Task<SalesforceResponse> CreateSalesforceOrder(int orderId)
     {
         try
         {

@@ -7,7 +7,7 @@ public interface ISalesforceService
 { 
     Task<SalesforceContactUpsertResponse> UpsertSalesforceCustomerAsync(int customerId, int? addressId = null);
 
-    Task<SalesforceOrderResponse> CreateSalesforceOrder(int orderId);
+    Task<SalesforceResponse> CreateSalesforceOrder(int orderId);
 
     Task<string> GetSalesforceToken();
 }

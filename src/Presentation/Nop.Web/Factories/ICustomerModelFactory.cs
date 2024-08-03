@@ -209,6 +209,6 @@ public partial interface ICustomerModelFactory
     /// </summary>
     /// <param name="orderId"></param>
     /// <returns></returns>
-    Task<SalesforceOrderResponse> PrepareSalesforceResponseModelForOrders(int orderId);
+    Task<SalesforceResponse> PrepareSalesforceResponseModelForOrders(int orderId);
     
 }

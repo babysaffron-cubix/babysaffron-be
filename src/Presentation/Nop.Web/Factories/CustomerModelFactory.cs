@@ -1150,7 +1150,8 @@ public partial class CustomerModelFactory : ICustomerModelFactory
         try
         {
             var customer = await _customerService.GetCustomerByIdAsync(customerId);
-            SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
+            SalesforceContactUpsertResponse salesforceContactUpsertResponse = new SalesforceContactUpsertResponse() { SalesforceResponse = new List<SalesforceResponse>() };
+            SalesforceResponse salesforceResponse = new SalesforceResponse();
             if (customer != null)
             {
 
@@ -1161,13 +1162,25 @@ public partial class CustomerModelFactory : ICustomerModelFactory
 
                 // there is a possibility that the customer has just registered with email and does not have a first, last name.
                 // in this case, fetch the first, last name from the address and use it to updated the customer. Later this updated detail will be send to salesforce
-                if (customer.FirstName == null || customer.LastName == null)
+                if(address != null)
                 {
-                    customer.FirstName = address.FirstName;
-                    customer.LastName = address.LastName;
+                    if (customer.FirstName == null || customer.LastName == null)
+                    {
+                        customer.FirstName = address.FirstName;
+                        customer.LastName = address.LastName;
 
-                    await _customerService.UpdateCustomerAsync(customer);
+                        await _customerService.UpdateCustomerAsync(customer);
+                    }
                 }
+
+                if(customer.FirstName == null || customer.LastName == null)
+                {
+                    salesforceResponse.CalloutErrorResult = true;
+                    salesforceResponse.ResultMsg = "LastName and FirstName are required for a customer";
+                    salesforceContactUpsertResponse.SalesforceResponse.Add(salesforceResponse);
+                    return salesforceContactUpsertResponse;
+                }
+                
 
                 //get sfdc contact number, which might have been saved the last time in the db
                 string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
@@ -1206,10 +1219,10 @@ public partial class CustomerModelFactory : ICustomerModelFactory
                     foreach (JObject json in jsonArray)
                     {
                         string sfdcNumber = json["SFDCNumber"]?.ToString();
-                        salesforceOrderResponse.SFDCNumber = sfdcNumber;
-                        salesforceOrderResponse.SFDCRecordId = json["SFDCRecordId"]?.ToString();
-                        salesforceOrderResponse.ResultMsg = json["ResultMsg"]?.ToString();
-                        salesforceOrderResponse.CalloutErrorResult = Convert.ToBoolean(json["CalloutErrorResult"]);
+                        salesforceResponse.SFDCNumber = sfdcNumber;
+                        salesforceResponse.SFDCRecordId = json["SFDCRecordId"]?.ToString();
+                        salesforceResponse.ResultMsg = json["ResultMsg"]?.ToString();
+                        salesforceResponse.CalloutErrorResult = Convert.ToBoolean(json["CalloutErrorResult"]);
 
                         if (sfdcNumber != null)
                         {
@@ -1226,10 +1239,8 @@ public partial class CustomerModelFactory : ICustomerModelFactory
 
 
             }
-
-
-            SalesforceContactUpsertResponse salesforceContactUpsertResponse = new SalesforceContactUpsertResponse() { SalesforceResponse = new List<SalesforceOrderResponse>() };
-            salesforceContactUpsertResponse.SalesforceResponse.Add(salesforceOrderResponse);
+            
+            salesforceContactUpsertResponse.SalesforceResponse.Add(salesforceResponse);
             return salesforceContactUpsertResponse;
 
         }
@@ -1359,10 +1370,10 @@ public partial class CustomerModelFactory : ICustomerModelFactory
 
 
 
-    public async Task<SalesforceOrderResponse> PrepareSalesforceResponseModelForOrders(int orderId)
+    public async Task<SalesforceResponse> PrepareSalesforceResponseModelForOrders(int orderId)
     {
         var order = await _orderService.GetOrderByIdAsync(orderId);
-        SalesforceOrderResponse salesforceOrderResponse = new SalesforceOrderResponse();
+        SalesforceResponse salesforceOrderResponse = new SalesforceResponse();
         SalesforceOrderRequest salesforceOrderRequest = new SalesforceOrderRequest();
         if (order != null)
         {
