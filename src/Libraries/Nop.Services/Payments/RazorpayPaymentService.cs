@@ -26,7 +26,8 @@ public partial class RazorpayPaymentService : IRazorpayPaymentService
             if (nopcommerceOrder != null)
             {
                 // this field contains the total post discounts
-                var amount = nopcommerceOrder.OrderTotal;
+                //multiplying it with CurrencyRate to handle scenarions where currency is USD and what is saved in db is always INR(as it is marked as primary currency in admin)
+                var amount = nopcommerceOrder.OrderTotal * nopcommerceOrder.CurrencyRate;
                 if(amount <=0)
                 {
                     razorpayOrderCreationResponse.AddError("Amount is 0, please re-validate your request.");

@@ -1,7 +1,7 @@
 ﻿using System;
 namespace Nop.Core.Domain.Salesforce;
 
-public partial class SalesforceOrderResponse
+public partial class SalesforceResponse
 {
 	public string SFDCRecordId { get; set; }
 	public string SFDCNumber { get; set; }
