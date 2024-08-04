@@ -1,4 +1,6 @@
 ﻿using System.Globalization;
+using DocumentFormat.OpenXml.EMMA;
+using MaxMind.GeoIP2.Model;
 using Nop.Core;
 using Nop.Core.Domain.Catalog;
 using Nop.Core.Domain.Common;
@@ -406,57 +408,77 @@ public partial class OrderProcessingService : IOrderProcessingService
     /// <exception cref="NopException">Validation problems</exception>
     protected virtual async Task PrepareAndValidateShippingInfoAsync(PlaceOrderContainer details, ProcessPaymentRequest processPaymentRequest)
     {
+
+        if (details.Customer.ShippingAddressId == null)
+            throw new NopException("Shipping address is not provided");
+
+        var shippingAddress = await _customerService.GetCustomerShippingAddressAsync(details.Customer);
+
+        if (!CommonHelper.IsValidEmail(shippingAddress?.Email))
+            throw new NopException("Email is not valid");
+
+        //clone shipping address
+        details.ShippingAddress = _addressService.CloneAddress(shippingAddress);
+
+        if (await _countryService.GetCountryByAddressAsync(details.ShippingAddress) is Core.Domain.Directory.Country shippingCountry && !shippingCountry.AllowsShipping)
+            throw new NopException($"Country '{shippingCountry.Name}' is not allowed for shipping");
+
+        #region OldCode_NotRequied
+
+
         //shipping info
-        if (await _shoppingCartService.ShoppingCartRequiresShippingAsync(details.Cart))
-        {
-            var pickupPoint = await _genericAttributeService.GetAttributeAsync<PickupPoint>(details.Customer,
-                NopCustomerDefaults.SelectedPickupPointAttribute, processPaymentRequest.StoreId);
-            if (_shippingSettings.AllowPickupInStore && pickupPoint != null)
-            {
-                var country = await _countryService.GetCountryByTwoLetterIsoCodeAsync(pickupPoint.CountryCode);
-                var state = await _stateProvinceService.GetStateProvinceByAbbreviationAsync(pickupPoint.StateAbbreviation, country?.Id);
+        //if (await _shoppingCartService.ShoppingCartRequiresShippingAsync(details.Cart))
+        //{
+        //    var pickupPoint = await _genericAttributeService.GetAttributeAsync<PickupPoint>(details.Customer,
+        //        NopCustomerDefaults.SelectedPickupPointAttribute, processPaymentRequest.StoreId);
+        //    if (_shippingSettings.AllowPickupInStore && pickupPoint != null)
+        //    {
+        //        var country = await _countryService.GetCountryByTwoLetterIsoCodeAsync(pickupPoint.CountryCode);
+        //        var state = await _stateProvinceService.GetStateProvinceByAbbreviationAsync(pickupPoint.StateAbbreviation, country?.Id);
 
-                details.PickupInStore = true;
-                details.PickupAddress = new Address
-                {
-                    Address1 = pickupPoint.Address,
-                    City = pickupPoint.City,
-                    County = pickupPoint.County,
-                    CountryId = country?.Id,
-                    StateProvinceId = state?.Id,
-                    ZipPostalCode = pickupPoint.ZipPostalCode,
-                    CreatedOnUtc = DateTime.UtcNow
-                };
-            }
-            else
-            {
-                if (details.Customer.ShippingAddressId == null)
-                    throw new NopException("Shipping address is not provided");
+        //        details.PickupInStore = true;
+        //        details.PickupAddress = new Address
+        //        {
+        //            Address1 = pickupPoint.Address,
+        //            City = pickupPoint.City,
+        //            County = pickupPoint.County,
+        //            CountryId = country?.Id,
+        //            StateProvinceId = state?.Id,
+        //            ZipPostalCode = pickupPoint.ZipPostalCode,
+        //            CreatedOnUtc = DateTime.UtcNow
+        //        };
+        //    }
+        //    else
+        //    {
+        //        if (details.Customer.ShippingAddressId == null)
+        //            throw new NopException("Shipping address is not provided");
 
-                var shippingAddress = await _customerService.GetCustomerShippingAddressAsync(details.Customer);
+        //        var shippingAddress = await _customerService.GetCustomerShippingAddressAsync(details.Customer);
 
-                if (!CommonHelper.IsValidEmail(shippingAddress?.Email))
-                    throw new NopException("Email is not valid");
+        //        if (!CommonHelper.IsValidEmail(shippingAddress?.Email))
+        //            throw new NopException("Email is not valid");
 
-                //clone shipping address
-                details.ShippingAddress = _addressService.CloneAddress(shippingAddress);
+        //        //clone shipping address
+        //        details.ShippingAddress = _addressService.CloneAddress(shippingAddress);
 
-                if (await _countryService.GetCountryByAddressAsync(details.ShippingAddress) is Country shippingCountry && !shippingCountry.AllowsShipping)
-                    throw new NopException($"Country '{shippingCountry.Name}' is not allowed for shipping");
-            }
+        //        if (await _countryService.GetCountryByAddressAsync(details.ShippingAddress) is Core.Domain.Directory.Country shippingCountry && !shippingCountry.AllowsShipping)
+        //            throw new NopException($"Country '{shippingCountry.Name}' is not allowed for shipping");
+        //    }
 
-            var shippingOption = await _genericAttributeService.GetAttributeAsync<ShippingOption>(details.Customer,
-                NopCustomerDefaults.SelectedShippingOptionAttribute, processPaymentRequest.StoreId);
-            if (shippingOption != null)
-            {
-                details.ShippingMethodName = shippingOption.Name;
-                details.ShippingRateComputationMethodSystemName = shippingOption.ShippingRateComputationMethodSystemName;
-            }
+        //    var shippingOption = await _genericAttributeService.GetAttributeAsync<ShippingOption>(details.Customer,
+        //        NopCustomerDefaults.SelectedShippingOptionAttribute, processPaymentRequest.StoreId);
+        //    if (shippingOption != null)
+        //    {
+        //        details.ShippingMethodName = shippingOption.Name;
+        //        details.ShippingRateComputationMethodSystemName = shippingOption.ShippingRateComputationMethodSystemName;
+        //    }
 
-            details.ShippingStatus = ShippingStatus.NotYetShipped;
-        }
-        else
-            details.ShippingStatus = ShippingStatus.ShippingNotRequired;
+        //    details.ShippingStatus = ShippingStatus.NotYetShipped;
+        //}
+        //else
+        //    details.ShippingStatus = ShippingStatus.ShippingNotRequired;
+        #endregion
+
     }
 
     /// <summary>
@@ -530,7 +552,7 @@ public partial class OrderProcessingService : IOrderProcessingService
 
         details.BillingAddress = _addressService.CloneAddress(billingAddress);
 
-        if (await _countryService.GetCountryByAddressAsync(details.BillingAddress) is Country billingCountry && !billingCountry.AllowsBilling)
+        if (await _countryService.GetCountryByAddressAsync(details.BillingAddress) is Core.Domain.Directory.Country billingCountry && !billingCountry.AllowsBilling)
             throw new NopException($"Country '{billingCountry.Name}' is not allowed for billing");
     }
 
@@ -618,7 +640,7 @@ public partial class OrderProcessingService : IOrderProcessingService
         var billingAddress = await _addressService.GetAddressByIdAsync(details.InitialOrder.BillingAddressId);
 
         details.BillingAddress = _addressService.CloneAddress(billingAddress);
-        if (await _countryService.GetCountryByAddressAsync(billingAddress) is Country billingCountry && !billingCountry.AllowsBilling)
+        if (await _countryService.GetCountryByAddressAsync(billingAddress) is Core.Domain.Directory.Country billingCountry && !billingCountry.AllowsBilling)
             throw new NopException($"Country '{billingCountry.Name}' is not allowed for billing");
 
         //checkout attributes
@@ -645,7 +667,7 @@ public partial class OrderProcessingService : IOrderProcessingService
 
                 //clone shipping address
                 details.ShippingAddress = _addressService.CloneAddress(shippingAddress);
-                if (await _countryService.GetCountryByAddressAsync(details.ShippingAddress) is Country shippingCountry && !shippingCountry.AllowsShipping)
+                if (await _countryService.GetCountryByAddressAsync(details.ShippingAddress) is Core.Domain.Directory.Country shippingCountry && !shippingCountry.AllowsShipping)
                     throw new NopException($"Country '{shippingCountry.Name}' is not allowed for shipping");
             }
             else if (details.InitialOrder.PickupAddressId.HasValue && await _addressService.GetAddressByIdAsync(details.InitialOrder.PickupAddressId.Value) is Address pickupAddress)
@@ -758,22 +780,33 @@ public partial class OrderProcessingService : IOrderProcessingService
             CustomOrderNumber = string.Empty
         };
 
-        if (details.BillingAddress is null)
-            throw new NopException("Billing address is not provided");
+        //if (details.BillingAddress is null)
+        //    throw new NopException("Billing address is not provided");
 
-        await _addressService.InsertAddressAsync(details.BillingAddress);
-        order.BillingAddressId = details.BillingAddress.Id;
-
-        if (details.PickupAddress != null)
+        //await _addressService.InsertAddressAsync(details.BillingAddress);
+        //order.BillingAddressId = details.BillingAddress.Id;
+        if(details.Customer.BillingAddressId != null)
         {
-            await _addressService.InsertAddressAsync(details.PickupAddress);
-            order.PickupAddressId = details.PickupAddress.Id;
+            order.BillingAddressId = Convert.ToInt32(details.Customer.BillingAddressId);
         }
+        order.ShippingAddressId = details.Customer.ShippingAddressId;
 
-        if (details.ShippingAddress != null)
+        //if (details.PickupAddress != null)
+        //{
+        //    await _addressService.InsertAddressAsync(details.PickupAddress);
+        //    order.PickupAddressId = details.PickupAddress.Id;
+        //}
+
+        if (order.ShippingAddressId != null)
         {
-            await _addressService.InsertAddressAsync(details.ShippingAddress);
-            order.ShippingAddressId = details.ShippingAddress.Id;
+            //await _addressService.InsertAddressAsync(details.ShippingAddress);
+            //order.ShippingAddressId = details.ShippingAddress.Id;
+
+            var indiaCountry = await _countryService.GetCountryByThreeLetterIsoCodeAsync("IND");
+            if (indiaCountry != null && indiaCountry.Id != order.ShippingAddressId)
+            {
+                order.OrderShippingExclTax = order.OrderShippingInclTax = _shoppingCartService.GetInternationShippingAmountIfAvailable();
+            }
         }
 
         await _orderService.InsertOrderAsync(order);

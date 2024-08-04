@@ -29,7 +29,7 @@ public partial class FlyoutShoppingCartViewComponent : NopViewComponent
         if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.EnableShoppingCart))
             return Content("");
 
-        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync();
+        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync(null);
         return View(model);
     }
 }

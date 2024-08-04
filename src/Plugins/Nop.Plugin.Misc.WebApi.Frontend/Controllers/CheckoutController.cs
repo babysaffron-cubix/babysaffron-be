@@ -1214,8 +1214,6 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
 
         if (billingAddressId != 0 && shippingAddressId != 0)
         {
-
-
             var billingAddress = await _customerService.GetCustomerAddressAsync(customer.Id, billingAddressId);
             var shippingAddress = billingAddressId != shippingAddressId ? await _customerService.GetCustomerAddressAsync(customer.Id, shippingAddressId) : billingAddress;
 

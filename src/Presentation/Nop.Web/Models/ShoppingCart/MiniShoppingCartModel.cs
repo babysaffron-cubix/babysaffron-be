@@ -28,6 +28,7 @@ public partial record MiniShoppingCartModel : BaseNopModel
 
     public OrderTotalsModel OrderTotalsModel { get; set; }
     public List<DiscountInfo> AppliedDiscountDetails { get; set; }
+    public decimal ShippingAmountInDollars { get; set; }
 
     #region Nested Classes
 
