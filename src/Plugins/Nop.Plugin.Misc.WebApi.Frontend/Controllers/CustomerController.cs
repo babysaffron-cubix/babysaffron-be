@@ -1575,7 +1575,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
         customer.Phone = request.Phone;
 
         await _customerService.UpdateCustomerAsync(customer);
-            await _salesforceService.UpsertSalesforceCustomerAsync(customer.Id);
+        await _salesforceService.UpsertSalesforceCustomerAsync(customer.Id);
 
         return Ok(new { response = "Customer Info updated succesfully." });
         }
@@ -1773,6 +1773,18 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             await _customerService.InsertCustomerAddressAsync(customer, address);
             model.Address.Id = address.Id;
 
+            if(customer.BillingAddressId == null)
+            {
+                customer.BillingAddressId = customer.ShippingAddressId = address.Id;
+                await _customerService.UpdateCustomerAsync(customer);
+            }
+
+            if (isFirstAddress)
+            {
+                // call the salesforce api to save the address
+                await _salesforceService.UpsertSalesforceCustomerAsync(customer.Id, model.Address.Id);
+            }
+
             return Ok(new AddressAddResponse()
             {
                 Model = model.ToDto<CustomerAddressEditModelDto>()
@@ -1787,12 +1799,7 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             loadCountries: async () => await _countryService.GetAllCountriesAsync((await _workContext.GetWorkingLanguageAsync()).Id),
             overrideAttributesXml: customAttributes);
 
-        if (isFirstAddress)
-        {
-            // call the salesforce api to save the address
-            await _salesforceService.UpsertSalesforceCustomerAsync(customer.Id, model.Address.Id);
-        }
-
+       
         return Ok(new AddressAddResponse()
         {
             Model = model.ToDto<CustomerAddressEditModelDto>(),
