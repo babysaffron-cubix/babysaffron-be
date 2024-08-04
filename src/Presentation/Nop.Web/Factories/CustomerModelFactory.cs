@@ -1184,7 +1184,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
                 
 
                 //get sfdc contact number, which might have been saved the last time in the db
-                string sfdcContactNumber = customer.CustomCustomerAttributesXML != null ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
+                string sfdcContactNumber = !String.IsNullOrEmpty(customer.CustomCustomerAttributesXML) ? await GetSFDCNumber(customer.CustomCustomerAttributesXML) : null;
 
                 SalesforceContactUpsertRequest salesforceContactUpsertRequest = new SalesforceContactUpsertRequest() { Contacts = new List<SalesforceContacts>() };
 

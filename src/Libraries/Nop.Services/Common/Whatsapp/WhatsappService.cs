@@ -69,8 +69,7 @@ public class WhatsappService : IWhatsappService
                 new KeyValuePair<string, string>("msg", whatappMessage),
                 new KeyValuePair<string, string>("isTemplate", _isTemplate),
                 new KeyValuePair<string, string>("header", _header),
-                new KeyValuePair<string, string>("footer", _footer),
-
+                new KeyValuePair<string, string>("footer", _footer)
             };
 
             // Encode form data

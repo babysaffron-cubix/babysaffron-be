@@ -801,9 +801,10 @@ public partial class OrderProcessingService : IOrderProcessingService
         {
             //await _addressService.InsertAddressAsync(details.ShippingAddress);
             //order.ShippingAddressId = details.ShippingAddress.Id;
+            var shippingAddress = await _addressService.GetAddressByIdAsync(Convert.ToInt32(order.ShippingAddressId));
 
             var indiaCountry = await _countryService.GetCountryByThreeLetterIsoCodeAsync("IND");
-            if (indiaCountry != null && indiaCountry.Id != order.ShippingAddressId)
+            if (indiaCountry != null && indiaCountry.Id != shippingAddress.CountryId)
             {
                 order.OrderShippingExclTax = order.OrderShippingInclTax = _shoppingCartService.GetInternationShippingAmountIfAvailable();
             }
