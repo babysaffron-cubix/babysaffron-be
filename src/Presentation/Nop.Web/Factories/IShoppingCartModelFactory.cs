@@ -56,7 +56,7 @@ public partial interface IShoppingCartModelFactory
     /// A task that represents the asynchronous operation
     /// The task result contains the mini shopping cart model
     /// </returns>
-    Task<MiniShoppingCartModel> PrepareMiniShoppingCartModelAsync();
+    Task<MiniShoppingCartModel> PrepareMiniShoppingCartModelAsync(int? countryId = null);
 
     /// <summary>
     /// Prepare selected checkout attributes

@@ -97,7 +97,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
     protected readonly ShoppingCartSettings _shoppingCartSettings;
     protected readonly TaxSettings _taxSettings;
     protected readonly VendorSettings _vendorSettings;
-    protected readonly ISpecificationAttributeService _specificationAttributeService;   
+    protected readonly ISpecificationAttributeService _specificationAttributeService;
     private static readonly char[] _separator = [','];
 
     #endregion
@@ -1019,7 +1019,7 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
     /// A task that represents the asynchronous operation
     /// The task result contains the mini shopping cart model
     /// </returns>
-    public virtual async Task<MiniShoppingCartModel> PrepareMiniShoppingCartModelAsync()
+    public virtual async Task<MiniShoppingCartModel> PrepareMiniShoppingCartModelAsync(int? countryId=null)
     {
         var customer = await _workContext.GetCurrentCustomerAsync();
 
@@ -1174,6 +1174,12 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
                     _discountService.GetPreferredDiscount(currentDiscount, model.SubTotalValue, out decimal discountAmount);
                     discountInfo.DiscountAppliedInCart = discountAmount;
                     model.AppliedDiscountDetails.Add(discountInfo);
+                }
+
+                var indiaCountry = await _countryService.GetCountryByThreeLetterIsoCodeAsync("IND");
+                if(indiaCountry != null && countryId != null && indiaCountry.Id != countryId)
+                {
+                    model.ShippingAmountInDollars = _shoppingCartService.GetInternationShippingAmountIfAvailable();
                 }
             }
         }

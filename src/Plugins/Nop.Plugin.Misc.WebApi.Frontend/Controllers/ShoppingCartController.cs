@@ -1043,12 +1043,12 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
     [HttpGet]
     [ProducesResponseType(typeof(MiniShoppingCartModelDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public virtual async Task<IActionResult> MiniCart()
+    public virtual async Task<IActionResult> MiniCart(int? countryId)
     {
         if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.EnableShoppingCart))
             return BadRequest();
 
-        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync();
+        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync(countryId);
 
 
         return Ok(model.ToDto<MiniShoppingCartModelDto>());
@@ -1057,7 +1057,7 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
     [HttpPost]
     [ProducesResponseType(typeof(ShoppingCartModelDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public virtual async Task<IActionResult> UpdateCart([FromBody] IDictionary<string, string> form)
+    public virtual async Task<IActionResult> UpdateCart([FromBody] IDictionary<string, string> form, int? countryId = null)
     {
         if (!await _permissionService.AuthorizeAsync(StandardPermissionProvider.EnableShoppingCart))
             return BadRequest();
@@ -1139,7 +1139,7 @@ public partial class ShoppingCartController : BaseNopWebApiFrontendController
         //return Ok(model.ToDto<ShoppingCartModelDto>());
 
 
-        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync();
+        var model = await _shoppingCartModelFactory.PrepareMiniShoppingCartModelAsync(countryId);
 
         return Ok(model.ToDto<MiniShoppingCartModelDto>());
     }

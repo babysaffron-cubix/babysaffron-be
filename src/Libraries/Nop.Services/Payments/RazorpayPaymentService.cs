@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 using System.Text;
+using Microsoft.Extensions.Configuration;
 using Nop.Services.Orders;
 using Org.BouncyCastle.Asn1.Pkcs;
 using Razorpay.Api;
@@ -11,11 +12,23 @@ public partial class RazorpayPaymentService : IRazorpayPaymentService
     public string _key;
     public string _secret;
     protected readonly IOrderService _orderService;
-    public RazorpayPaymentService(IOrderService orderService)
+    private readonly IConfiguration _configuration;
+
+
+    public RazorpayPaymentService(IOrderService orderService, IConfiguration configuration)
     {
-        _key = "rzp_test_jESpwwUNibFtvH";
-        _secret = "0tNTap3BA5OIQ2MBdAHR7ZmW";
+        _configuration = configuration;
         _orderService = orderService;
+
+        var builder = new ConfigurationBuilder()
+         .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+         .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+         .AddEnvironmentVariables();
+
+        _configuration = builder.Build();
+
+        _key = _configuration["AppSettings:RazorpayKey"]; ;
+        _secret = _configuration["AppSettings:RazorpaySecret"]; ;
     }
     public async Task<RazorpayOrderCreationResponse> CreateOrder(int orderId)
     {
@@ -27,7 +40,7 @@ public partial class RazorpayPaymentService : IRazorpayPaymentService
             {
                 // this field contains the total post discounts
                 //multiplying it with CurrencyRate to handle scenarions where currency is USD and what is saved in db is always INR(as it is marked as primary currency in admin)
-                var amount = nopcommerceOrder.OrderTotal * nopcommerceOrder.CurrencyRate;
+                var amount = (nopcommerceOrder.OrderTotal * nopcommerceOrder.CurrencyRate) + nopcommerceOrder.OrderShippingInclTax;
                 if(amount <=0)
                 {
                     razorpayOrderCreationResponse.AddError("Amount is 0, please re-validate your request.");

@@ -329,4 +329,6 @@ public partial interface IShoppingCartService
     Task<(string error, int cycleLength, RecurringProductCyclePeriod cyclePeriod, int totalCycles)> GetRecurringCycleInfoAsync(IList<ShoppingCartItem> shoppingCart);
 
     Task<List<Discount>> GetActiveDiscounts();
+
+    decimal GetInternationShippingAmountIfAvailable();
 }

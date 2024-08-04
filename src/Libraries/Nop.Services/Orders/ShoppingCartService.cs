@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Routing;
+using Microsoft.Extensions.Configuration;
 using Nop.Core;
 using Nop.Core.Caching;
 using Nop.Core.Domain.Catalog;
@@ -64,6 +65,10 @@ public partial class ShoppingCartService : IShoppingCartService
     protected readonly OrderSettings _orderSettings;
     protected readonly ShoppingCartSettings _shoppingCartSettings;
     protected readonly IRepository<Discount> _discountRepository;
+    protected readonly string _internationalShippingAmountInDollars;
+    private readonly IConfiguration _configuration;
+    private readonly ICountryService _countryService;
+
 
     #endregion
 
@@ -99,7 +104,9 @@ public partial class ShoppingCartService : IShoppingCartService
         IWorkContext workContext,
         OrderSettings orderSettings,
         ShoppingCartSettings shoppingCartSettings,
-        IRepository<Discount> discountRepository)
+        IRepository<Discount> discountRepository,
+        IConfiguration configuration,
+        ICountryService countryService)
     {
         _catalogSettings = catalogSettings;
         _aclService = aclService;
@@ -132,6 +139,18 @@ public partial class ShoppingCartService : IShoppingCartService
         _orderSettings = orderSettings;
         _shoppingCartSettings = shoppingCartSettings;
         _discountRepository = discountRepository;
+        _countryService = countryService;
+
+        _configuration = configuration;
+
+        var builder = new ConfigurationBuilder()
+          .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
+          .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+          .AddEnvironmentVariables();
+
+        _configuration = builder.Build();
+
+        _internationalShippingAmountInDollars = _configuration["AppSettings:InternationalShippingAmountInDollars"];
     }
 
     #endregion
@@ -1951,5 +1970,11 @@ public partial class ShoppingCartService : IShoppingCartService
         return activeDiscounts;
     }
 
+
+    public decimal GetInternationShippingAmountIfAvailable()
+    {   
+        Decimal.TryParse(_internationalShippingAmountInDollars, out decimal shippingAmount);
+        return shippingAmount;
+    }
     #endregion
 }

@@ -23,10 +23,6 @@ public class WhatsappService : IWhatsappService
     private readonly string _whatappUrl;
 
 
-
-
-
-
     #endregion
 
 
