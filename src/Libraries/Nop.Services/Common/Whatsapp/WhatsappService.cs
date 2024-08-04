@@ -16,7 +16,7 @@ public class WhatsappService : IWhatsappService
     private const string _method = "SendMessage";
     private const string _v = "1.1";
     private const string _format = "json";
-    private const string _message = "Dear {0},\nYour Order No. {1} has been Accepted. Total Approved Quantity is {2} Grams. Outstanding Amount of this order is Rs. {3}.";
+    private const string _message = "Dear {0},\nYour Order No. {1} has been Accepted. Total Approved Quantity is {2} Grams. Outstanding Amount of this order is {3}.";
     private const string _isTemplate = "true";
     private const string _header = "Your Order has been Accepted";
     private const string _footer = "Thank You!";

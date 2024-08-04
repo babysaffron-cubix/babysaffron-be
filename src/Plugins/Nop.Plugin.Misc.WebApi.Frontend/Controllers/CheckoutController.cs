@@ -1316,7 +1316,7 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
                 {
                     Name = $"{customer.FirstName} {customer.LastName}",
                     OrderId = razorpayPaymentSaveRequest.BabySaffronOrderId,
-                    OrderAmount = $"{order.OrderSubtotalExclTax * order.CurrencyRate} {order.CustomerCurrencyCode}",
+                    OrderAmount = $"{order.OrderTotal * order.CurrencyRate} {order.CustomerCurrencyCode}",
                     Weight = (await _customerModelFactory.GetTotalWeightOfAnOrder(order.Id)).ToString()
 
                 };
