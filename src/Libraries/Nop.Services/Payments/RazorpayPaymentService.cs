@@ -41,13 +41,14 @@ public partial class RazorpayPaymentService : IRazorpayPaymentService
                 // this field contains the total post discounts
                 //multiplying it with CurrencyRate to handle scenarions where currency is USD and what is saved in db is always INR(as it is marked as primary currency in admin)
                 var amount = (nopcommerceOrder.OrderTotal * nopcommerceOrder.CurrencyRate) + nopcommerceOrder.OrderShippingInclTax;
-                if(amount <=0)
+
+                if (amount <=0)
                 {
                     razorpayOrderCreationResponse.AddError("Amount is 0, please re-validate your request.");
                 }
                 RazorpayClient client = new RazorpayClient(_key, _secret);
                 Dictionary<string, object> options = new Dictionary<string, object>();
-                options.Add("amount", amount * 100); //amount in paisa
+                options.Add("amount", (int)(amount * 100)); //amount in paisa
                 options.Add("currency", nopcommerceOrder.CustomerCurrencyCode);
                 options.Add("receipt", Guid.NewGuid());
 
