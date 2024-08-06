@@ -213,7 +213,7 @@ public partial class PriceFormatter : IPriceFormatter
     /// </returns>
     public virtual async Task<string> FormatOrderPriceAsync(decimal price,
         decimal currencyRate, string customerCurrencyCode, bool displayCustomerCurrency,
-        Currency primaryStoreCurrency, int languageId, bool? priceIncludesTax = null, bool? showTax = null)
+        Currency primaryStoreCurrency, int languageId, bool? priceIncludesTax = null, bool? showTax = null, bool? appendPrimaryText = null)
     {
         var needAddPriceOnCustomerCurrency = primaryStoreCurrency.CurrencyCode != customerCurrencyCode && displayCustomerCurrency;
         var includesTax = priceIncludesTax ?? await _workContext.GetTaxDisplayTypeAsync() == TaxDisplayType.IncludingTax;
@@ -226,7 +226,8 @@ public partial class PriceFormatter : IPriceFormatter
         var customerPrice = _currencyService.ConvertCurrency(price, currencyRate);
         var customerPriceText = await FormatPriceAsync(customerPrice, true, currency,
             languageId, includesTax, showTax ?? _taxSettings.DisplayTaxSuffix);
-        priceText += $"<br />[{customerPriceText}]";
+        priceText  =  appendPrimaryText == null? $"{customerPriceText }<br />[{priceText}]" : customerPriceText;
+
 
         return priceText;
     }

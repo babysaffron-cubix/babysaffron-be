@@ -1,4 +1,5 @@
 ﻿using System.Net;
+using DocumentFormat.OpenXml.Wordprocessing;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -410,25 +411,29 @@ public partial class OrderModelFactory : IOrderModelFactory
         ArgumentNullException.ThrowIfNull(order);
 
         var primaryStoreCurrency = await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId);
+        var customerCurrency = await _currencyService.GetCurrencyByCodeAsync(order.CustomerCurrencyCode) ?? new Currency
+        {
+            CurrencyCode = order.CustomerCurrencyCode
+        };
         var languageId = (await _workContext.GetWorkingLanguageAsync()).Id;
 
         //subtotal
         model.OrderSubtotalInclTax = await _priceFormatter
             .FormatOrderPriceAsync(order.OrderSubtotalInclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, true);
+                true, primaryStoreCurrency, languageId, true);
         model.OrderSubtotalExclTax = await _priceFormatter
             .FormatOrderPriceAsync(order.OrderSubtotalExclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, false);
+                true, primaryStoreCurrency, languageId, false);
         model.OrderSubtotalInclTaxValue = order.OrderSubtotalInclTax;
         model.OrderSubtotalExclTaxValue = order.OrderSubtotalExclTax;
 
         //discount (applied to order subtotal)
         var orderSubtotalDiscountInclTaxStr = await _priceFormatter
             .FormatOrderPriceAsync(order.OrderSubTotalDiscountInclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, true);
+               true, primaryStoreCurrency, languageId, true);
         var orderSubtotalDiscountExclTaxStr = await _priceFormatter
             .FormatOrderPriceAsync(order.OrderSubTotalDiscountExclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, false);
+                true, primaryStoreCurrency, languageId, false);
         if (order.OrderSubTotalDiscountInclTax > decimal.Zero)
             model.OrderSubTotalDiscountInclTax = orderSubtotalDiscountInclTaxStr;
         if (order.OrderSubTotalDiscountExclTax > decimal.Zero)
@@ -437,14 +442,17 @@ public partial class OrderModelFactory : IOrderModelFactory
         model.OrderSubTotalDiscountExclTaxValue = order.OrderSubTotalDiscountExclTax;
 
         //shipping
-        model.OrderShippingInclTax = await _priceFormatter
-            .FormatOrderPriceAsync(order.OrderShippingInclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, true,
-                _taxSettings.ShippingIsTaxable && _taxSettings.DisplayTaxSuffix);
-        model.OrderShippingExclTax = await _priceFormatter
-            .FormatOrderPriceAsync(order.OrderShippingExclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, false,
-                _taxSettings.ShippingIsTaxable && _taxSettings.DisplayTaxSuffix);
+        model.OrderShippingInclTax = await _priceFormatter.FormatPriceAsync(order.OrderShippingExclTax, true, customerCurrency,
+            languageId,false, false);
+        //await _priceFormatter
+        //.FormatOrderPriceAsync(order.OrderShippingInclTax, order.CurrencyRate, order.CustomerCurrencyCode,
+        //    _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, true,
+        //    _taxSettings.ShippingIsTaxable && _taxSettings.DisplayTaxSuffix);
+        model.OrderShippingExclTax = model.OrderShippingInclTax;
+            //await _priceFormatter
+            //.FormatOrderPriceAsync(order.OrderShippingExclTax, order.CurrencyRate, order.CustomerCurrencyCode,
+            //    _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, false,
+            //    _taxSettings.ShippingIsTaxable && _taxSettings.DisplayTaxSuffix);
         model.OrderShippingInclTaxValue = order.OrderShippingInclTax;
         model.OrderShippingExclTaxValue = order.OrderShippingExclTax;
 
@@ -453,11 +461,11 @@ public partial class OrderModelFactory : IOrderModelFactory
         {
             model.PaymentMethodAdditionalFeeInclTax = await _priceFormatter
                 .FormatOrderPriceAsync(order.PaymentMethodAdditionalFeeInclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                    _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, true,
+                    true, primaryStoreCurrency, languageId, true,
                     _taxSettings.PaymentMethodAdditionalFeeIsTaxable && _taxSettings.DisplayTaxSuffix);
             model.PaymentMethodAdditionalFeeExclTax = await _priceFormatter
                 .FormatOrderPriceAsync(order.PaymentMethodAdditionalFeeExclTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                    _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, false,
+                    true, primaryStoreCurrency, languageId, false,
                     _taxSettings.PaymentMethodAdditionalFeeIsTaxable && _taxSettings.DisplayTaxSuffix);
         }
 
@@ -467,7 +475,7 @@ public partial class OrderModelFactory : IOrderModelFactory
         //tax
         model.Tax = await _priceFormatter
             .FormatOrderPriceAsync(order.OrderTax, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, null, false);
+                true, primaryStoreCurrency, languageId, null, false);
         var taxRates = _orderService.ParseTaxRates(order, order.TaxRates);
         var displayTaxRates = _taxSettings.DisplayTaxRates && taxRates.Any();
         var displayTax = !displayTaxRates;
@@ -478,7 +486,7 @@ public partial class OrderModelFactory : IOrderModelFactory
                 Rate = _priceFormatter.FormatTaxRate(tr.Key),
                 Value = await _priceFormatter
                     .FormatOrderPriceAsync(tr.Value, order.CurrencyRate, order.CustomerCurrencyCode,
-                        _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, null, false)
+                        true, primaryStoreCurrency, languageId, null, false)
             });
         }
 
@@ -492,7 +500,7 @@ public partial class OrderModelFactory : IOrderModelFactory
         {
             model.OrderTotalDiscount = await _priceFormatter
                 .FormatOrderPriceAsync(-order.OrderDiscount, order.CurrencyRate, order.CustomerCurrencyCode,
-                    _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, null, false);
+                    true, primaryStoreCurrency, languageId, null, false);
         }
         model.OrderTotalDiscountValue = order.OrderDiscount;
 
@@ -517,7 +525,7 @@ public partial class OrderModelFactory : IOrderModelFactory
         //total
         model.OrderTotal = await _priceFormatter
             .FormatOrderPriceAsync(order.OrderTotal, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, null, false);
+                true, primaryStoreCurrency, languageId, null, false);
         model.OrderTotalValue = order.OrderTotal;
 
         //refunded amount
@@ -542,9 +550,15 @@ public partial class OrderModelFactory : IOrderModelFactory
             return;
 
         var profit = await _orderReportService.ProfitReportAsync(orderId: order.Id);
+        //model.Profit = await _priceFormatter
+        //    .FormatOrderPriceAsync(profit, order.CurrencyRate, order.CustomerCurrencyCode,
+        //        true, primaryStoreCurrency, languageId, null, false);
+        decimal totalProfit = order.OrderTotal + (order.OrderShippingExclTax / order.CurrencyRate);
+       
+
         model.Profit = await _priceFormatter
-            .FormatOrderPriceAsync(profit, order.CurrencyRate, order.CustomerCurrencyCode,
-                _orderSettings.DisplayCustomerCurrencyOnOrders, primaryStoreCurrency, languageId, null, false);
+            .FormatOrderPriceAsync(totalProfit, order.CurrencyRate, order.CustomerCurrencyCode,
+                true, primaryStoreCurrency, languageId, true);
     }
 
     /// <summary>
@@ -1008,6 +1022,8 @@ public partial class OrderModelFactory : IOrderModelFactory
     {
         ArgumentNullException.ThrowIfNull(searchModel);
 
+       
+
         //get parameters to filter orders
         var orderStatusIds = (searchModel.OrderStatusIds?.Contains(0) ?? true) ? null : searchModel.OrderStatusIds.ToList();
         var paymentStatusIds = (searchModel.PaymentStatusIds?.Contains(0) ?? true) ? null : searchModel.PaymentStatusIds.ToList();
@@ -1064,14 +1080,27 @@ public partial class OrderModelFactory : IOrderModelFactory
                 };
 
                 //convert dates to the user time
-                orderModel.CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(order.CreatedOnUtc, DateTimeKind.Utc);
+                orderModel.CreatedOn = order.CreatedOnUtc;
+                //await _dateTimeHelper.ConvertToUserTimeAsync(order.CreatedOnUtc, DateTimeKind.Utc);
+
+                var primaryStoreCurrency = await _currencyService.GetCurrencyByIdAsync(_currencySettings.PrimaryStoreCurrencyId);
+                var customerCurrency = await _currencyService.GetCurrencyByCodeAsync(order.CustomerCurrencyCode) ?? new Currency
+                {
+                    CurrencyCode = order.CustomerCurrencyCode
+                };
+                var languageId = (await _workContext.GetWorkingLanguageAsync()).Id;
+
 
                 //fill in additional values (not existing in the entity)
                 orderModel.StoreName = (await _storeService.GetStoreByIdAsync(order.StoreId))?.Name ?? "Deleted";
                 orderModel.OrderStatus = await _localizationService.GetLocalizedEnumAsync(order.OrderStatus);
                 orderModel.PaymentStatus = await _localizationService.GetLocalizedEnumAsync(order.PaymentStatus);
                 orderModel.ShippingStatus = await _localizationService.GetLocalizedEnumAsync(order.ShippingStatus);
-                orderModel.OrderTotal = await _priceFormatter.FormatPriceAsync(order.OrderTotal, true, false);
+                //orderModel.OrderTotal = await _priceFormatter.FormatPriceAsync(order.OrderTotal, true, false);
+
+                orderModel.OrderTotal = await _priceFormatter
+           .FormatOrderPriceAsync(order.OrderSubtotalInclTax, order.CurrencyRate, order.CustomerCurrencyCode,
+               true, primaryStoreCurrency, languageId, true, false, false);
 
                 return orderModel;
             });
@@ -1193,7 +1222,8 @@ public partial class OrderModelFactory : IOrderModelFactory
             model.OrderStatus = await _localizationService.GetLocalizedEnumAsync(order.OrderStatus);
             model.StoreName = (await _storeService.GetStoreByIdAsync(order.StoreId))?.Name ?? "Deleted";
             model.CustomerInfo = await _customerService.IsRegisteredAsync(customer) ? customer.Email : await _localizationService.GetResourceAsync("Admin.Customers.Guest");
-            model.CreatedOn = await _dateTimeHelper.ConvertToUserTimeAsync(order.CreatedOnUtc, DateTimeKind.Utc);
+            model.CreatedOn = order.CreatedOnUtc;
+                //await _dateTimeHelper.ConvertToUserTimeAsync(order.CreatedOnUtc, DateTimeKind.Utc);
             model.CustomValues = _paymentService.DeserializeCustomValues(order);
             model.AuthorizationTransactionCode = order.AuthorizationTransactionCode;
 

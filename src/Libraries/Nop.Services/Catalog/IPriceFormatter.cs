@@ -74,7 +74,7 @@ public partial interface IPriceFormatter
     /// </returns>
     Task<string> FormatOrderPriceAsync(decimal price,
         decimal currencyRate, string customerCurrencyCode, bool displayCustomerCurrency,
-        Currency primaryStoreCurrency, int languageId, bool? priceIncludesTax = null, bool? showTax = null);
+        Currency primaryStoreCurrency, int languageId, bool? priceIncludesTax = null, bool? showTax = null, bool? appendPrimaryText = null);
 
     /// <summary>
     /// Formats the price
