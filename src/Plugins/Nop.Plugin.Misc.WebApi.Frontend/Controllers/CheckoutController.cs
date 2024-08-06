@@ -1310,18 +1310,17 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
             var order = await _orderService.GetOrderByIdAsync(razorpayPaymentSaveRequest.BabySaffronOrderId);
             if (order != null)
             {
-                var customer = await _customerService.GetCustomerByIdAsync(order.CustomerId);
+                var orderBillingAddress = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
 
                 WhatsappEmailRequest whatsappEmailRequest = new WhatsappEmailRequest()
                 {
-                    Name = $"{customer.FirstName} {customer.LastName}",
+                    Name = $"{orderBillingAddress.FirstName} {orderBillingAddress.LastName}",
                     OrderId = razorpayPaymentSaveRequest.BabySaffronOrderId,
                     OutstandingAmount = "0",
                     Weight = (await _customerModelFactory.GetTotalWeightOfAnOrder(order.Id)).ToString()
-
                 };
 
-                await _whatsappService.SendOrderConfirmationOnWhatsapp(customer.Phone, whatsappEmailRequest);
+                await _whatsappService.SendOrderConfirmationOnWhatsapp(orderBillingAddress.PhoneNumber, whatsappEmailRequest);
             }
             return Ok(response);
         }
