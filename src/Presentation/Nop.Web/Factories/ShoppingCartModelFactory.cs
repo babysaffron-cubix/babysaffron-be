@@ -1172,7 +1172,14 @@ public partial class ShoppingCartModelFactory : IShoppingCartModelFactory
                         CouponCode = discount.CouponCode
                     };
                     _discountService.GetPreferredDiscount(currentDiscount, model.SubTotalValue, out decimal discountAmount);
-                    discountInfo.DiscountAppliedInCart = discountAmount;
+
+                    // if discount is in absolute number then convert it as per current currency
+                    if (!discountInfo.UsePercentage)
+                    {
+                        discountAmount = await _currencyService.ConvertFromPrimaryStoreCurrencyAsync(discountAmount, currentCurrency);
+                    }
+
+                    discountInfo.DiscountAppliedInCart = await _priceFormatter.FormatPriceAsync(discountAmount);
                     model.AppliedDiscountDetails.Add(discountInfo);
                 }
 

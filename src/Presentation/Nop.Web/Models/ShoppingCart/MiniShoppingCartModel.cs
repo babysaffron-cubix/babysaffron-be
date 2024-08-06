@@ -101,7 +101,7 @@ public partial record MiniShoppingCartModel : BaseNopModel
         /// </summary>
         public string CouponCode { get; set; }
 
-        public decimal DiscountAppliedInCart { get; set; }
+        public string DiscountAppliedInCart { get; set; }
 
     }
 
