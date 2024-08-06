@@ -6,6 +6,6 @@ public class WhatsappEmailRequest
 	public string Name { get; set; }
 	public int OrderId { get; set; }
 	public string Weight { get; set; }
-	public string OrderAmount { get; set; }
+	public string OutstandingAmount { get; set; }
 }
 
