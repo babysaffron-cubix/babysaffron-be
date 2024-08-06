@@ -556,11 +556,11 @@ public partial class CustomerController : BaseNopWebApiFrontendController
             }
 
             //raise event
-            await _eventPublisher.PublishAsync(new CustomerLoggedinEvent(existingCustomer));
+            //await _eventPublisher.PublishAsync(new CustomerLoggedinEvent(existingCustomer));
 
-            //activity log
-            await _customerActivityService.InsertActivityAsync(existingCustomer, "PublicStore.Login",
-            await _localizationService.GetResourceAsync("ActivityLog.PublicStore.Login"), existingCustomer);
+            ////activity log
+            //await _customerActivityService.InsertActivityAsync(existingCustomer, "PublicStore.Login",
+            //await _localizationService.GetResourceAsync("ActivityLog.PublicStore.Login"), existingCustomer);
         }
         authenticateResponseCustom.StatusCode = StatusCodes.Status200OK;
         return authenticateResponseCustom;
