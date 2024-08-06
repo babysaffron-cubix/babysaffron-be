@@ -407,7 +407,8 @@ public partial class OrderModelFactory : IOrderModelFactory
             //excluding tax
 
             //order shipping
-            var orderShippingExclTaxInCustomerCurrency = _currencyService.ConvertCurrency(order.OrderShippingExclTax, order.CurrencyRate);
+            var orderShippingExclTaxInCustomerCurrency = order.OrderShippingExclTax;
+                //_currencyService.ConvertCurrency(order.OrderShippingExclTax, order.CurrencyRate);
             model.OrderShipping = await _priceFormatter.FormatShippingPriceAsync(orderShippingExclTaxInCustomerCurrency, true, order.CustomerCurrencyCode, languageId, false);
             model.OrderShippingValue = orderShippingExclTaxInCustomerCurrency;
             //payment method additional fee
