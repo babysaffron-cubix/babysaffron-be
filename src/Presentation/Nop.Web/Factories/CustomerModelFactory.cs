@@ -1516,15 +1516,14 @@ public partial class CustomerModelFactory : ICustomerModelFactory
     private static decimal ExtractWeightValue(string input)
     {
         // Regular expression to match one or more digits at the beginning of the string
-        var match = Regex.Match(input, @"^\d+");
-
-        if (match.Success)
-        {
+        var weightValuePart = input.Replace("gm","");
+        try
+        { 
             decimal weightValue = 0;
-            Decimal.TryParse(match.Value, out weightValue);
+            Decimal.TryParse(weightValuePart, out weightValue);
             return weightValue;
         }
-        else
+        catch
         {
             throw new ArgumentException("No numeric value found in the input string.");
         }
@@ -1625,6 +1624,7 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             var currentProduct = productOverviewModels.Where(x => x.Id == item.ProductId).FirstOrDefault();
 
             var weightValue = GetWeightValue(currentProduct);
+
             totalWeight += weightValue!= null ? Convert.ToDecimal(weightValue) : 0;
             totalWeight *= item.Quantity;
         }
