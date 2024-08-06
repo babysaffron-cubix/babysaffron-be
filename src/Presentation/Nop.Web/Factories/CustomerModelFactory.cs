@@ -1624,7 +1624,9 @@ public partial class CustomerModelFactory : ICustomerModelFactory
             var currentProduct = productOverviewModels.Where(x => x.Id == item.ProductId).FirstOrDefault();
 
             var weightValue = GetWeightValue(currentProduct);
-            totalWeight += weightValue!= null ? Convert.ToDecimal(weightValue * item.Quantity) : 0;
+
+            totalWeight += weightValue!= null ? Convert.ToDecimal(weightValue) : 0;
+            totalWeight *= item.Quantity;
         }
 
         return totalWeight;
