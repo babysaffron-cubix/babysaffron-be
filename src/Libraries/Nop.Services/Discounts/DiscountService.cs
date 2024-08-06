@@ -340,13 +340,15 @@ public partial class DiscountService : IDiscountService
                 result.Clear();
                 result.Add(discount);
             }
-            else
-            {
-                var discountFromCoupon = GetDiscountAmount(discount, amount);
-                discountAmount += discountFromCoupon;
 
-                result.Add(discount);
-            }
+            // For RequiresCouponCode - it should always be Cumulative so it will be added in below code
+            //else
+            //{
+            //    var discountFromCoupon = GetDiscountAmount(discount, amount);
+            //    discountAmount += discountFromCoupon;
+
+            //    result.Add(discount);
+            //}
         }
 
 
@@ -354,16 +356,16 @@ public partial class DiscountService : IDiscountService
         //right now we calculate discount values based on the original amount value
         //please keep it in mind if you're going to use discounts with "percentage"
         var cumulativeDiscounts = discounts.Where(x => x.IsCumulative).OrderBy(x => x.Name).ToList();
-        if (cumulativeDiscounts.Count <= 1)
+        if (cumulativeDiscounts.Count <= 0)
             return result;
 
         var cumulativeDiscountAmount = cumulativeDiscounts.Sum(d => GetDiscountAmount(d, amount));
-        if (cumulativeDiscountAmount <= discountAmount)
-            return result;
+        //if (cumulativeDiscountAmount <= discountAmount)
+        //    return result;
 
-        discountAmount = cumulativeDiscountAmount;
+        discountAmount += cumulativeDiscountAmount;
 
-        result.Clear();
+        //result.Clear();
         result.AddRange(cumulativeDiscounts);
 
         return result;
