@@ -1320,7 +1320,7 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
                         Weight = (await _customerModelFactory.GetTotalWeightOfAnOrder(order.Id)).ToString()
                     };
 
-                    await _whatsappService.SendOrderConfirmationOnWhatsapp("+918588847669", whatsappEmailRequest);
+                    await _whatsappService.SendOrderConfirmationOnWhatsapp(orderBillingAddress.PhoneNumber, whatsappEmailRequest);
                 }
                 await _salesforceService.CreateSalesforceOrder(razorpayPaymentSaveRequest.BabySaffronOrderId);
 
