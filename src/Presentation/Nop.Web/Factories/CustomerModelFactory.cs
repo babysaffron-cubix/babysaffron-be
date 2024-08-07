@@ -1621,12 +1621,12 @@ public partial class CustomerModelFactory : ICustomerModelFactory
 
         foreach (OrderItem item in orderDetails)
         {
+            
             var currentProduct = productOverviewModels.Where(x => x.Id == item.ProductId).FirstOrDefault();
 
             var weightValue = GetWeightValue(currentProduct);
 
-            totalWeight += weightValue!= null ? Convert.ToDecimal(weightValue) : 0;
-            totalWeight *= item.Quantity;
+            totalWeight += (weightValue!= null ? Convert.ToDecimal(weightValue) : 0) * item.Quantity;
         }
 
         return totalWeight;
