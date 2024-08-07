@@ -1305,22 +1305,25 @@ public partial class CheckoutController : BaseNopWebApiFrontendController
         try
         {
             var response = await _orderProcessingService.UpdateOrderStatus(razorpayPaymentSaveRequest);
-            await _salesforceService.CreateSalesforceOrder(razorpayPaymentSaveRequest.BabySaffronOrderId);
-
-            var order = await _orderService.GetOrderByIdAsync(razorpayPaymentSaveRequest.BabySaffronOrderId);
-            if (order != null)
+            if (!String.IsNullOrEmpty(razorpayPaymentSaveRequest.RazorpayPaymentId))
             {
-                var orderBillingAddress = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
-
-                WhatsappEmailRequest whatsappEmailRequest = new WhatsappEmailRequest()
+                var order = await _orderService.GetOrderByIdAsync(razorpayPaymentSaveRequest.BabySaffronOrderId);
+                if (order != null)
                 {
-                    Name = $"{orderBillingAddress.FirstName} {orderBillingAddress.LastName}",
-                    OrderId = razorpayPaymentSaveRequest.BabySaffronOrderId,
-                    OutstandingAmount = "0",
-                    Weight = (await _customerModelFactory.GetTotalWeightOfAnOrder(order.Id)).ToString()
-                };
+                    var orderBillingAddress = await _addressService.GetAddressByIdAsync(order.BillingAddressId);
 
-                await _whatsappService.SendOrderConfirmationOnWhatsapp(orderBillingAddress.PhoneNumber, whatsappEmailRequest);
+                    WhatsappEmailRequest whatsappEmailRequest = new WhatsappEmailRequest()
+                    {
+                        Name = $"{orderBillingAddress.FirstName} {orderBillingAddress.LastName}",
+                        OrderId = razorpayPaymentSaveRequest.BabySaffronOrderId,
+                        OutstandingAmount = "0",
+                        Weight = (await _customerModelFactory.GetTotalWeightOfAnOrder(order.Id)).ToString()
+                    };
+
+                    await _whatsappService.SendOrderConfirmationOnWhatsapp("+918588847669", whatsappEmailRequest);
+                }
+                await _salesforceService.CreateSalesforceOrder(razorpayPaymentSaveRequest.BabySaffronOrderId);
+
             }
             return Ok(response);
         }
