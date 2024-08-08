@@ -1439,6 +1439,11 @@ public partial class CustomerModelFactory : ICustomerModelFactory
 
                 #endregion
             }
+            else
+            {
+                salesforceOrderResponse.CalloutErrorResult = true;
+                salesforceOrderResponse.ResultMsg = "SFDCNumber for the customer does not exist. Please generate it first from the admin portal.";
+            }
 
         }
         return salesforceOrderResponse;
