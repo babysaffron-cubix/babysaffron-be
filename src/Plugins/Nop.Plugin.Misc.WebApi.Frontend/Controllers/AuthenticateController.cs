@@ -16,6 +16,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Identity;
 using Nop.Services.Customers;
 using Nop.Services;
+using Nop.Core.Domain.Customers;
+using Nop.Core.Domain.Stores;
 
 namespace Nop.Plugin.Misc.WebApi.Frontend.Controllers;
 
@@ -29,6 +31,9 @@ public partial class AuthenticateController : BaseNopWebApiController
     private readonly WebApiCommonSettings _webApiCommonSettings;
     private readonly ICustomerService _customerService;
     private readonly ISalesforceService _salesforceService;
+    private readonly CustomerSettings _customerSettings;
+    private readonly ICustomerRegistrationService _customerRegistrationService;
+
 
     #endregion
 
@@ -38,12 +43,16 @@ public partial class AuthenticateController : BaseNopWebApiController
         IAuthorizationUserService authorizationUserService,
         WebApiCommonSettings webApiCommonSettings,
         ICustomerService customerService,
-        ISalesforceService salesforceService)
+        ISalesforceService salesforceService,
+        CustomerSettings customerSettings,
+        ICustomerRegistrationService customerRegistrationService)
     {
         _authorizationUserService = authorizationUserService;
         _webApiCommonSettings = webApiCommonSettings;
         _customerService = customerService;
         _salesforceService = salesforceService;
+        _customerSettings = customerSettings;
+        _customerRegistrationService = customerRegistrationService;
     }
 
     #endregion
@@ -176,6 +185,35 @@ public partial class AuthenticateController : BaseNopWebApiController
 
     return principal;
 }
+
+
+    /// <summary>
+    /// Authenticate user
+    /// </summary>
+    /// <param name="request"></param>
+    [Authorize(true)]
+    [HttpPost]
+    [ProducesResponseType(typeof(CustomerRegistrationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+    public virtual async Task<IActionResult> RegisterUserByEmailPassword([FromBody] AuthenticateCustomerRequest request)
+    {
+
+        CustomerRegistrationRequest customerRegistrationRequest = new CustomerRegistrationRequest(
+            null,
+            request.Email,
+            request.Email,
+            request.Password,
+            PasswordFormat.Encrypted,
+            0,
+            true
+        );
+        var response = await _customerRegistrationService.RegisterCustomerWithoutGuestUserAsync(customerRegistrationRequest);
+
+
+        return Ok(response);
+
+    }
 
 
 

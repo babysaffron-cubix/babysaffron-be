@@ -39,6 +39,14 @@ public partial interface ICustomerRegistrationService
     /// </returns>
     Task<CustomerRegistrationResult> RegisterCustomerAsync(CustomerRegistrationRequest request);
 
+
+    /// <summary>
+    /// Register a customer without a guest user
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    Task<CustomerRegistrationResult> RegisterCustomerWithoutGuestUserAsync(CustomerRegistrationRequest request);
+
     /// <summary>
     /// Change password
     /// </summary>
