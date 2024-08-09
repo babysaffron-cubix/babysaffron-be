@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc.Routing;
 using Nop.Core;
 using Nop.Core.Domain.Customers;
 using Nop.Core.Events;
+using Nop.Data;
 using Nop.Services.Authentication;
 using Nop.Services.Authentication.MultiFactor;
 using Nop.Services.Common;
@@ -44,6 +45,8 @@ public partial class CustomerRegistrationService : ICustomerRegistrationService
     protected readonly IWorkContext _workContext;
     protected readonly IWorkflowMessageService _workflowMessageService;
     protected readonly RewardPointsSettings _rewardPointsSettings;
+    protected readonly IRepository<Customer> _customerRepository;
+
 
     #endregion
 
@@ -69,7 +72,8 @@ public partial class CustomerRegistrationService : ICustomerRegistrationService
         IUrlHelperFactory urlHelperFactory,
         IWorkContext workContext,
         IWorkflowMessageService workflowMessageService,
-        RewardPointsSettings rewardPointsSettings)
+        RewardPointsSettings rewardPointsSettings,
+        IRepository<Customer> customerRepository)
     {
         _customerSettings = customerSettings;
         _actionContextAccessor = actionContextAccessor;
@@ -92,6 +96,7 @@ public partial class CustomerRegistrationService : ICustomerRegistrationService
         _workContext = workContext;
         _workflowMessageService = workflowMessageService;
         _rewardPointsSettings = rewardPointsSettings;
+        _customerRepository = customerRepository;
     }
 
     #endregion
@@ -578,6 +583,74 @@ public partial class CustomerRegistrationService : ICustomerRegistrationService
         await _customerService.UpdateCustomerAsync(customer);
 
         return CustomerLoginResults.Successful;
+    }
+
+
+    public async Task<CustomerRegistrationResult> RegisterCustomerWithoutGuestUserAsync(CustomerRegistrationRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+
+        var result = new CustomerRegistrationResult();
+        
+
+        if (string.IsNullOrEmpty(request.Email))
+        {
+            result.AddError(await _localizationService.GetResourceAsync("Account.Register.Errors.EmailIsNotProvided"));
+            return result;
+        }
+
+        if (!CommonHelper.IsValidEmail(request.Email))
+        {
+            result.AddError(await _localizationService.GetResourceAsync("Common.WrongEmail"));
+            return result;
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Password))
+        {
+            result.AddError(await _localizationService.GetResourceAsync("Account.Register.Errors.PasswordIsNotProvided"));
+            return result;
+        }
+
+        //validate unique user
+        if (await _customerService.GetCustomerByEmailAsync(request.Email) != null)
+        {
+            result.AddError(await _localizationService.GetResourceAsync("Account.Register.Errors.EmailAlreadyExists"));
+            return result;
+        }
+
+
+        var customer = new Customer
+        {
+            CustomerGuid = Guid.NewGuid(),
+            Active = true,
+            CreatedOnUtc = DateTime.UtcNow,
+            LastActivityDateUtc = DateTime.UtcNow,
+            Email = request.Email,
+            Username = request.Username
+        };
+
+        
+
+        //add to 'Registered' role
+        var registeredRole = await _customerService.GetCustomerRoleBySystemNameAsync(NopCustomerDefaults.RegisteredRoleName) ?? throw new NopException("'Registered' role could not be loaded");
+
+        await _customerRepository.InsertAsync(customer);
+
+        var customerPassword = new CustomerPassword
+        {
+            CustomerId = customer.Id,
+            PasswordFormat = PasswordFormat.Encrypted,
+            CreatedOnUtc = DateTime.UtcNow,
+            Password = _encryptionService.EncryptText(request.Password)
+        };
+
+        await _customerService.InsertCustomerPasswordAsync(customerPassword);
+
+
+        await _customerService.AddCustomerRoleMappingAsync(new CustomerCustomerRoleMapping { CustomerId = customer.Id, CustomerRoleId = registeredRole.Id });
+
+        return result;
+
     }
 
     #endregion
